@@ -132,4 +132,4 @@ dmypy.json
 *.swp
 
 # src/scripts/old/*
-src/scripts/old/*
+src/pstl_tools/scripts/old/*
