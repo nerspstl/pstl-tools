@@ -1,5 +1,7 @@
-import pyvisa as visa
 import os
+
+import pyvisa as visa
+
 class TDS640a:
     
     def __init__(self, port = None, mydir = None, myfile = None, channel = None):

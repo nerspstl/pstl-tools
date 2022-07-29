@@ -1,0 +1,53 @@
+# pyproject.toml
+
+[build-system]
+requires = ["setuptools>=63.2.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+
+[project]
+name = "pstl_tools"
+version = "0.1.0"
+description = "Python scripts for making working with UMICH NERS PSTL Lab Equipment much easier"
+readme = "README.md"
+authors = [{ name = "tyjoto", email = "tyjoto@gmail.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    'License :: OSI Approved :: Apache Software License',
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["pstl", "instruments", "tools","gpib","rs232","visa"]
+dependencies = [
+    "numpy",
+    "matplotlib>=3.5.2",
+    "pyvisa",
+]
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = ["pip-tools","pyvisa-py","pyserial"]
+
+[project.urls]
+Homepage = "https://github.com/tyjoto/pstl-tools"
+
+[project.scripts]
+#ipe = "ipe.__main__:main"
+
+[tool.bumpver]
+current_version = "0.1.0"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = true
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
+"src/pstl_tools/__init__.py" = ["{version}"]
+"README.md" = [
+    "{version}",
+    "{pep440_version}",
+]
+

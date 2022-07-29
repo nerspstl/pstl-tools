@@ -130,3 +130,6 @@ dmypy.json
 
 # .swp
 *.swp
+
+# src/scripts/old/*
+src/scripts/old/*
