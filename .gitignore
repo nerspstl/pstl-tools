@@ -131,5 +131,5 @@ dmypy.json
 # .swp
 *.swp
 
-# src/scripts/old/*
-src/pstl_tools/scripts/old/*
+# old but keep for reference
+old/

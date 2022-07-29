@@ -1,9 +1,0 @@
-test = 'Hello'
-fname = "out.csv"
-port = "COM6"
-baudrate = "9600"
-V2 = 4.415300546448087
-resolution = 5/1024
-#ratio = 10/4.3956
-ratio = 10/V2
-delay = 1.0
