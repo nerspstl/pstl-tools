@@ -5,6 +5,7 @@ Python scripts for making working with UMICH NERS PSTL Lab Equipment much easier
 - v3.9.6
 
 ## Requried Packages
+- pyvisa
 - pyserial
 - numpy
 
