@@ -1,8 +1,8 @@
-import initialize as init
+from pstl.instruments.daq.agilent import initiaize as init
 
-import .commands as cmds
+from pstl.instruments.daq.agilent import commands as cmds
 
-class AGILENT_34970A():
+class AGILENT34970A():
     def __init__(self,port=None):
         # trys to open if given port
         # if fails, it gives you options
@@ -28,3 +28,5 @@ class AGILENT_34970A():
 
     def getTempTCK(self,loc):
         return self.query(cmds.cmdGetTemperatureTCK(loc))
+
+
