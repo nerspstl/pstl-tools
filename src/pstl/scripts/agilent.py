@@ -1,13 +1,14 @@
 from pstl.instruments.daq import agilent
 
-def open_port():
+def open_port(port=None):
 
-    instrument=agilent.agilent34970A.AGILENT34970A()
+    instrument=agilent.agilent34970A.AGILENT34970A(port)
 
     return instrument
 
 def main():
-    daq=open_port()
+    port="GPIB::10::INSTRU"
+    daq=open_port(port)
     daq.addCardAgilent34901A(1,20,'TCK')
     daq.list_cards()
     daq.card[1].list_channels()

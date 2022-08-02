@@ -22,6 +22,7 @@ class AGILENT34901A():
         self.channel = channels
 
     def list_channels(self):
+        nchannels=self.nchannels
         for k in range(1,nchannels+1):
             channels=self.channel[k].location
             chtypes=self.channel[k].chtype
