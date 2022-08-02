@@ -43,7 +43,7 @@ class AGILENT34970A():
 
     def addCardAgilent34901A(self,slot,nchannels,chtype):
 
-        self.card[slots]=\
+        self.card[slot]=\
         cards.agilent34901A.AGILENT34901A(slot,nchannels,chtype)
 
 
