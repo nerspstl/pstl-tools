@@ -16,8 +16,8 @@ def choose_port():
     # if refresh
     while strin == "R":
         while strin == "R":
-            print('\nAvailable Ports:(Enter "R" for refresh)
-                    \nPort #:\tPort Name')
+            print('\nAvailable Ports:(Enter "R" for refresh)'\
+                    +'\nPort #:\tPort Name')
             print('__________________')
             a = 0
             for aa in rm.list_resources():

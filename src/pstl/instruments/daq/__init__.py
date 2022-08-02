@@ -1,1 +1,1 @@
-from daq import agilent
+from pstl.instruments.daq import agilent
