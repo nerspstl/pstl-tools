@@ -12,7 +12,7 @@ class AGILENT34970A():
             try:
                 res=init.open_port(port)
             except:
-                print("Failed to open %s"%(port))
+                print("\nFailed to open %s"%(port))
                 port=None
         if port is None:
             res=init.choose_port()
@@ -54,7 +54,7 @@ class AGILENT34970A():
         print()
         for k in range(1,len(card)):
             try:
-                print("Slot: %s\nType: %s\nChannels: %s\n\n"%(str(k),str(card[k].name),str(card[k].nchannels)))
+                print("Slot: %s\nType: %s\nChannels: %s\n"%(str(k),str(card[k].name),str(card[k].nchannels)))
                 self.card[k].channel[0]()
             except:
                 print("Slot: %s\nType: None\n\n"%(str(k)))
@@ -66,7 +66,7 @@ class AGILENT34970A():
         """
         if channel is None:
             loc=location
-            loc=int(math.floor(loc/100))
+            location=int(math.floor(loc/100))
             channel = int(location-loc*100)
 
             return self.query(self.card[location].channel[channel].getcmd)
