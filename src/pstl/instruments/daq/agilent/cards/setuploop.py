@@ -17,7 +17,8 @@ def __loop_setup(channels,chtype,nslots=None):
             __loop_multi(channels,chtype,nslots)
     else:
         bool_str = isinstance(chtype,str)
-        try bool_str:
+        try:
+            bool_str
             # only one type make all that type
             __loop_single(channels,chtype,nslots)
         except TypeError:
