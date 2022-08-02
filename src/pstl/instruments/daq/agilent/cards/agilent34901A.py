@@ -14,7 +14,7 @@ class AGILENT34901A():
         self.type="agilent card"
         channels = [None]*(nchannels+1)
         # check of chtypes was a list
-        channels = sul.__loop_setup(channels,chtype,slot)
+        channels = sul.loop_setup(channels,chtype,slot)
             
         self.nchannels=nchannels
         self.slot=slot

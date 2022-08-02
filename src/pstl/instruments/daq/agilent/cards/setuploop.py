@@ -1,7 +1,7 @@
 
 from pstl.instruments.daq.agilent.cards import channel
 
-def __loop_setup(channels,chtype,nslots=None):
+def loop_setup(channels,chtype,nslots=None):
     nchannels = int(len(channels)-1)
     bool_list = isinstance(chtype,list)
     if bool_list:
