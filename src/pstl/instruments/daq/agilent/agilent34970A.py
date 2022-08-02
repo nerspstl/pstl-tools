@@ -15,6 +15,8 @@ class AGILENT34970A():
         if port is None:
             res=init.choose_port()
 
+        self.name="agilent34970A"
+        self.type="daq"
         self.visa=res
         self.write=self.visa.write
         self.read=self.visa.read

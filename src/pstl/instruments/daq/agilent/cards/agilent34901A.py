@@ -11,6 +11,7 @@ class AGILENT34901A():
         display the list of channels and thier configured type.)
         """
         self.name="agilent34901A"
+        self.type="agilent card"
         channels = [None]*(nchannels+1)
         # check of chtypes was a list
         channels = sul.__loop_setup(channels,chtype,slot)
