@@ -11,7 +11,7 @@ def main():
     daq=open_port(port)
     daq.addCardAgilent34901A(1,20,'TCK')
     daq.list_cards()
-    daq.card[1].list_channels()
+    #daq.card[1].list_channels()
     daq.get(113)
     daq.get(1,13)
 

@@ -1,3 +1,5 @@
+import math
+
 from pstl.instruments.daq.agilent import initialize as init
 from pstl.instruments.daq.agilent import cards
 from pstl.instruments.daq.agilent import commands as cmds
@@ -53,6 +55,7 @@ class AGILENT34970A():
         for k in range(1,len(card)):
             try:
                 print("Slot: %s\nType: %s\nChannels: %s\n\n"%(str(k),str(card[k].name),str(card[k].nchannels)))
+                self.card[k].channel[0]()
             except:
                 print("Slot: %s\nType: None\n\n"%(str(k)))
 
@@ -63,6 +66,9 @@ class AGILENT34970A():
         """
         if channel is None:
             loc=location
+            loc=int(math.floor(loc/100))
+            channel = int(location-loc*100)
+
+            return self.query(self.card[location].channel[channel].getcmd)
         else:
-            loc=location*100+channel
-        return self.query(self.card[location].channel[channel].getcmd)
+            return self.query(self.card[location].channel[channel].getcmd)
