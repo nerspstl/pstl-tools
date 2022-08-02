@@ -18,9 +18,9 @@ def main():
     #daq.card[1].list_channels()
     print(daq.card[card].channel[channel].getcmd)
     r=daq.get(location)
-    print("Temperature %.2f degC"%(r))
+    print("Temperature %.2f degC"%(str(r)))
     r=daq.get(card,channel)
-    print("Temperature %.2f degC"%(r))
+    print("Temperature %.2f degC"%(str(r)))
 
 if __name__=="__main__":
     main()
