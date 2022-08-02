@@ -23,10 +23,11 @@ class AGILENT34901A():
 
     def list_channels(self):
         nchannels=self.nchannels
+        print()
         for k in range(1,nchannels+1):
             channel=self.channel[k].location
             chtype=self.channel[k].chtype
-            print("\nChannel %s: Type: %s"%(str(channel),str(chtype)))
+            print("Channel %s: Type: %s\n"%(str(channel),str(chtype)))
 
 
 
