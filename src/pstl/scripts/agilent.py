@@ -13,8 +13,10 @@ def main():
     daq.addCardAgilent34901A(1,20,'TCK')
     daq.list_cards()
     #daq.card[1].list_channels()
-    daq.get(113)
-    daq.get(1,13)
+    r=daq.get(113)
+    print(r)
+    r=daq.get(1,13)
+    print(r)
 
 if __name__=="__main__":
     main()
