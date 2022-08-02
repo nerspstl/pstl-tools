@@ -49,11 +49,12 @@ class AGILENT34970A():
 
     def list_cards(self):
         card=self.card
+        print()
         for k in range(1,len(card)):
             try:
-                print("\n\nSlot: %s\nType: %s\nChannels: %s"%(str(k),str(card[k].name),str(card[k].nchannels)))
+                print("Slot: %s\nType: %s\nChannels: %s\n\n"%(str(k),str(card[k].name),str(card[k].nchannels)))
             except:
-                print("\n\nSlot: %s\nType: None"%(str(k)))
+                print("Slot: %s\nType: None\n\n"%(str(k)))
 
     def get(self,location,channel=None):
         """
