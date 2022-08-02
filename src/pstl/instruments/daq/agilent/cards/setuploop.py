@@ -35,7 +35,7 @@ def __loop_single(channels,chtype,nslots=None):
             loc = int(nslot*100 + k)
         except:
             loc = int(k)
-        channels[k-1] = channel.Channel(loc,chtype)
+        channels[k-1] = channel.CHANNEL(loc,chtype)
     return channels
 
 def __loop_multi(channels,chtypes,nslots=None):
@@ -48,5 +48,5 @@ def __loop_multi(channels,chtypes,nslots=None):
         except:
             loc = int(k)
         chtype = chtypes[k-1]
-        channels[k-1] = channel.Channel(loc,chtype)
+        channels[k-1] = channel.CHANNEL(loc,chtype)
     return channels
