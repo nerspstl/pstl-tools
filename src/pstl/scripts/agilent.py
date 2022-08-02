@@ -8,6 +8,7 @@ def open_port(port=None):
 
 def main():
     port="GPIB0::10::INSTR"
+    port=None
     daq=open_port(port)
     daq.addCardAgilent34901A(1,20,'TCK')
     daq.list_cards()
