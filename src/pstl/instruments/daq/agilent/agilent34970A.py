@@ -20,8 +20,9 @@ class AGILENT34970A():
         self.read=self.visa.read
         self.query=self.visa.query
 
+        card = [None]*4    # three potential cards and 0 is list cards
         card[0]=self.list_cards
-        self.card = [None]*4    # three potential cards and 0 is list cards
+        self.card=card
     
     def getVDC(self,loc):
         return self.query(cmds.cmdGetVoltageDC(loc))
@@ -45,10 +46,10 @@ class AGILENT34970A():
 
 
     def list_cards(self):
-        cards=self.card
+        card=self.card
         for k in range(1,len(card)):
             try:
-                print("\n\nSlot: %s\nType: %s\nChannels: %s"%(k,cards[k].name,cards[k].nchannels))
+                print("\n\nSlot: %s\nType: %s\nChannels: %s"%(k,card[k].name,card[k].nchannels))
             except:
                 print("\n\nSlot: %s\nType: None"%(k))
 
