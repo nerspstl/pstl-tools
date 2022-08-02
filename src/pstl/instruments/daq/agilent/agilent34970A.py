@@ -68,7 +68,8 @@ class AGILENT34970A():
             loc=location
             location=int(math.floor(loc/100))
             channel = int(loc-location*100)
-
-            return self.query(self.card[location].channel[channel].getcmd)
-        else:
-            return self.query(self.card[location].channel[channel].getcmd)
+            print(location)
+            print(channel)
+        cmd=self.card[location].channel[channel].getcmd
+        print(cmd)
+        return self.query(cmd)
