@@ -51,11 +51,11 @@ class AGILENT34970A():
         card=self.card
         for k in range(1,len(card)):
             try:
-                print("\n\nSlot: %s\nType: %s\nChannels: %s"%(k,card[k].name,card[k].nchannels))
+                print("\n\nSlot: %s\nType: %s\nChannels: %s"%(str(k),str(card[k].name),str(card[k].nchannels)))
             except:
-                print("\n\nSlot: %s\nType: None"%(k))
+                print("\n\nSlot: %s\nType: None"%(str(k)))
 
-    def getChannel(self,location,channel=None):
+    def get(self,location,channel=None):
         """
         if only location then 'slot,##channel'
         if both location and channel then location is slot

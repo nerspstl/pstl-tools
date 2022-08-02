@@ -25,7 +25,7 @@ class AGILENT34901A():
         channels=self.channel.location
         chtypes=self.channel.chtype
         for k in range(1,nchannels+1):
-            print("\nChannel %s: Type: %s"%(channels[k],chtype[k-1]))
+            print("\nChannel %s: Type: %s"%(str(channels[k]),str(chtype[k-1])))
 
 
 
