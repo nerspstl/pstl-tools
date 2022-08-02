@@ -13,7 +13,7 @@ def __loop_setup(channels,chtype,nslots=None):
             __loop_single(channels,chtype,nslots)
         else:
             print("Length of chtype is less than nchannels."\
-                    +"Configuring first %i"%(len(chtype))i)
+                    +"Configuring first %i"%(len(chtype)))
             __loop_multi(channels,chtype,nslots)
     else:
         bool_str = isinstance(chtype,str)
