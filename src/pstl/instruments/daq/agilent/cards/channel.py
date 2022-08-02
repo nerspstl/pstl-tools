@@ -8,9 +8,9 @@ class CHANNEL():
 
         
     def change(self,location,chtype):
-       """
-       Changes channel type
-       """
+        """
+        Changes channel type
+        """
         if chtype=="VDC":
             get=cmds.cmdGetVoltageDC(self.location)
         elif chtype=="VAC":

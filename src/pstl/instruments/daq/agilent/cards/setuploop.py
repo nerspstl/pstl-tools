@@ -16,9 +16,8 @@ def __loop_setup(channels,chtype,nslots=None):
                     +"Configuring first %i"%(len(chtype)))
             __loop_multi(channels,chtype,nslots)
     else:
-        bool_str = isinstance(chtype,str)
         try:
-            bool_str
+            bool_str = isinstance(chtype,str)
             # only one type make all that type
             __loop_single(channels,chtype,nslots)
         except TypeError:
