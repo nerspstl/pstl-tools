@@ -67,7 +67,7 @@ class AGILENT34970A():
         if channel is None:
             loc=location
             location=int(math.floor(loc/100))
-            channel = int(location-loc*100)
+            channel = int(loc-location*100)
 
             return self.query(self.card[location].channel[channel].getcmd)
         else:
