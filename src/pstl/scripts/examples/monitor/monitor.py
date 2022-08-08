@@ -19,18 +19,16 @@ class MONITOR():
         self.figure=fig
         ax=ax_list.ravel()
         self.axes=ax
-        wm = plt.get_current_fig_manager()
-        wm.window.state('zoomed')
 
         nax=len(ax)
         self.nax=nax
         subplot=[None]*nax
         r=[None]*nax
         for k in range(nax):
-            subplot[k]=SUBPLOT(ax[k],int(113+k))
-            subplot[k].location
+            subplot[k]=SUBPLOT(ax[k],int(112+k))
         self.subplot=subplot
 
+        #daq=DAQ("GPIB0::10::INSTR")
         daq=DAQ()
 
         daq.addCardAgilent34901A(1,20,'TCK')
@@ -39,8 +37,12 @@ class MONITOR():
         self.daq=daq
 
     def monitor(self):
+        delay=5
         r=[None]*self.nax
         dt=[None]*self.nax
+        #wm = plt.get_current_fig_manager()
+        #wm.window.state('zoomed')
+        #plt.show(block=False)
         start_time = None
         while True:
             try:
@@ -57,6 +59,15 @@ class MONITOR():
                             float(self.daq.get(self.subplot[k].location))\
                             )
                     dis.ax.plot(dis.x,dis.y,"-b")
+                    
+                    print("Loc:%s\nT=%s\n"%(dis.location,dis.y[-1]))
+                    plt.show(block=False)
+                    cnt=input("Press enter>>")
+	        # time delay
+                if delay is None or delay == 0:
+                     pass
+                else:
+                     time.sleep(delay-((time.time()-start_time)%delay))
             except KeyboardInterrupt:
                 print("Exitting loop..")
                 break
@@ -65,6 +76,7 @@ class MONITOR():
 
 def monitor():
     temperatures=MONITOR(3,3)
+    print("monitoring...")
     temperatures.monitor()
 
 
