@@ -14,7 +14,7 @@ class MONITOR():
         self.nrows=nrows
         self.ncols=ncols
 
-        fig,ax_list=plt.suplots(nrows=3,ncols=3)
+        fig,ax_list=plt.subplots(nrows=3,ncols=3)
         self.figure=fig
         ax=ax_list.ravel()
         self.axes=ax
