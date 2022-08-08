@@ -28,6 +28,7 @@ class MONITOR():
         r=[None]*nax
         for k in range(nax):
             subplot[k]=SUBPLOT(ax[k],int(113+k))
+            subplot[k].location
         self.subplot=subplot
 
         daq=DAQ()
