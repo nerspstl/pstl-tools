@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import time
 from pstl.instruments.daq.agilent.agilent34970A import AGILENT34970A as DAQ
 
 class SUBPLOT():
