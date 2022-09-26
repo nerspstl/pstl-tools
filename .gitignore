@@ -133,3 +133,8 @@ dmypy.json
 
 # old but keep for reference
 old/
+
+# contacts
+src/pstl/contacts/individuals/*.json
+src/pstl/contacts/groups/*.json
+src/pstl/tools/alerts/logs/*
