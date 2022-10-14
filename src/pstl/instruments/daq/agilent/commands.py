@@ -6,3 +6,6 @@ def cmdGetVoltageAC(loc):
 
 def cmdGetTemperatureTCK(loc):
     return "MEAS:TEMP? TC,K,(@%s)"%(loc)
+
+def cmdGetResistance(loc):
+    return "MEAS:RES? (@%s)"%(loc)

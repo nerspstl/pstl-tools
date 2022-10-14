@@ -17,6 +17,8 @@ class CHANNEL():
             get=cmds.cmdGetVoltageAC(self.location)
         elif chtype=="TCK":
             get=cmds.cmdGetTemperatureTCK(self.location)
+        elif chtype=="RES":
+            get=cmds.cmdGetResistance(self.location)
         else:
             print("Channel Type (chtype) not set to known value at Channel %s"%(str(self.location)))
             get=None

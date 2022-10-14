@@ -22,7 +22,7 @@ def warning_send(s,attempt:str=None):
     body=s
     msgtype="warning"
 
-    groupname='test'
+    groupname='rocket'
 
     center.contact_group(Sender,body,groupname,'all',subject=subject)
 
@@ -35,7 +35,7 @@ def update_send(s):
     body=s
     msgtype="info"
 
-    groupname='test'
+    groupname='rocket'
 
     center.contact_group(Sender,body,groupname,'email',subject=subject)
 
@@ -286,7 +286,7 @@ def main():
     delay_2=60
     now_last_send=None
     logicReset=0
-    pressureLimit=1
+    pressureLimit=1e-3
     gas="n2"
     ser=serial.Serial("COM1")
     # first grab is iffy

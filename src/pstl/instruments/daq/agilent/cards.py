@@ -1,7 +1,7 @@
 
-from pstl.instruments.daq.agilent.cards import setuploop as sul
+from pstl.instruments.daq.agilent import cardsetuploop as sul
 
-class AGILENT34901A():
+class Agilent34901A():
     def __init__(self,slot=None,nchannels=20,chtype=None):
 
         """

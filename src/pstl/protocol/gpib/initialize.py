@@ -32,9 +32,9 @@ def choose_port():
             print("Not a valid entry please try again")
             strin="R"
 
-    print('Using ' + port)
-
-
+    print('Trying ' + port)
     resource=open_port(port)
+    print('\nFound:')
+    print(resource)
     return resource
 

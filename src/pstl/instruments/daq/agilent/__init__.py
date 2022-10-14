@@ -1,1 +1,1 @@
-from pstl.instruments.daq.agilent import agilent34970A
+from pstl.instruments.daq.agilent.gpib import Agilent34970A

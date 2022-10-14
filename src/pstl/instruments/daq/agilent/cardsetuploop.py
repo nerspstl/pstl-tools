@@ -1,5 +1,5 @@
 
-from pstl.instruments.daq.agilent.cards import channel
+from pstl.instruments.daq.agilent import channel
 
 def loop_setup(channels,chtype,slot=None):
     nchannels = int(len(channels)-1)

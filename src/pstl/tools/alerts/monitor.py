@@ -92,8 +92,8 @@ class Monitor():
             ys.append(y_out)
 
             # Limit x and y lists to 20 items
-            #xs = xs[-20:]
-            #ys = ys[-20:]
+            xs = xs[-20:]
+            ys = ys[-20:]
 
             # Draw x and y lists
             ax.clear()
