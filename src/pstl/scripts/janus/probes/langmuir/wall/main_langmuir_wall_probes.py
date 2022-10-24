@@ -89,6 +89,7 @@ def main():
 
     """
     print("running ...")
+    print("close figure to stop and save data")
     try:
         # args for scan function in animate
         args=(ps,daq,daq_slot,channels,supply_voltages,resistance,voltage_delay)
