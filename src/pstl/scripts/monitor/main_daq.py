@@ -1,4 +1,4 @@
-from pstl.scripts.examples.monitor import monitor as mon
+from pstl.scripts.monitor import monitor as mon
 
 
 
