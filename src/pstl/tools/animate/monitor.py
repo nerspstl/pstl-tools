@@ -69,6 +69,7 @@ class Subplot():
         self.xlabel=kwargs.get('xlabel',None)
         self.ylabel=kwargs.get('ylabel',None)
         self.title=kwargs.get('title',None)
+        self.rotate_xaxis_labels=kwargs.get("rotate_xaxis_labels",False)
 
 class Figure():
     def __init__(self,nrows:int=1,ncols:int=1,**kwargs):
@@ -214,7 +215,8 @@ class Figure():
 
             # Format plot
             ax.grid(subplot.grid)
-            ax.tick_params(axis='x',labelrotation=45)
+            if subplot.rotate_xaxis_labels is not False:
+                ax.tick_params(axis='x',labelrotation=subplot.rotate_xaxis_labels)
             #ax.set_xticklabls(ax.get_xticks(),rotation=45)
             ax.set(title=subplot.title)
             ax.set(xlabel=subplot.xlabel)

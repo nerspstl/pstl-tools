@@ -34,7 +34,7 @@ Homepage = "https://github.com/tyjoto/pstl-tools"
 
 [project.scripts]
 #ipe = "ipe.__main__:main"
-langmuir_wall "pstl.scripts.janus.probes.wall.__main__:main"
+janus_langmuir_wall = "pstl.scripts.janus.probes.langmuir.wall.__main__:main"
 
 [tool.bumpver]
 current_version = "0.1.0"
