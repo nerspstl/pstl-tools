@@ -40,7 +40,8 @@ def scan(j,ps,daq,slot,channels,voltages,resistance,voltage_delay):
     # else, use this list as resistance values for
     if resistance is True:
         r,v=scanDAQRESVDC(daq,slot,channels)
-    elif len(resistance)==len(channels)-1:
+    elif isinstance(resistance,(list,np.ndarray)) and \
+            len(resistance)==len(channels)-1:
         r=resistance
         v=scanDAQVDC(daq,slot,channels)
     else: #resistance is False or resistance is None:

@@ -7,6 +7,7 @@ from pstl.instruments.daq.agilent.gpib import Agilent34970A as DAQ
 from pstl.instruments.ps.kepco.gpib import BOP_100_1M_488B as PS
 from pstl.tools.animate.monitor import Figure as FIG 
 from pstl.scripts.janus.utls import sweep
+from pstl.scripts.janus.utls.agilent import scanDAQRESVDC
 
 def exit_handler(save,obj):
     if save:
@@ -88,6 +89,12 @@ def main():
     -1
 
     """
+
+    # get resistance before stating loop
+    if resistance is True:
+        resistance=scanDAQRESVDC(daq,daq_slot,channels)
+
+    # run actual program
     print("running ...")
     print("close figure to stop and save data")
     try:
