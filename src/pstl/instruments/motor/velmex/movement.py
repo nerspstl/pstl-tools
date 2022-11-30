@@ -23,8 +23,6 @@ import math
 # start data, run x, stop data, run y
 # start data, run x, stop data, run y...
 # data collection
-# add a time delay???, add in a busy request
-# repeat every .1 seconds
 # start data collection right before movement start
 # how to end data collection right 
 # then store matrix?? or get at very end??
@@ -105,46 +103,61 @@ def create_mov_list(x_sweeps,y_inc = 10,x_inc = 0):
 
 def move_and_collect_data(instr,mov_list,take_data=True):
 
-    increment = math.floor(len(mov_list)/2)+1
+    increment = len(mov_list)-1
 
     if take_data:
 
         for i in range(0,increment,2):
 
             check_if_ready(myInstr)
+            check_pos(myInstr)
             print('Starting data collection...')
             print(mov_list[i])
             instr.write(ascii_convert(mov_list[i])) 
 
             check_if_ready(myInstr)
+            check_pos(myInstr)
             print('Ending data collection...')
             print(mov_list[i+1])
             instr.write(ascii_convert(mov_list[i+1])) 
 
         check_if_ready(myInstr)
+        check_pos(myInstr)
+        print(mov_list[-1])
+        instr.write(ascii_convert(mov_list[-1])) 
+        check_if_ready(myInstr)
+        check_pos(myInstr)
+
         print('Storing data...')        
 
-def check_x_pos(instr):
-    instr.write(ascii_convert('?'))
-    #print(instr.read_until(b'\r').decode())
-    print(instr.read(1).decode())
+def check_pos(instr):
+    instr.write(ascii_convert('X'))
+    print(instr.read_until(b'\r').decode())
+
+    instr.write(ascii_convert('Y'))
+    print(instr.read_until(b'\r').decode())
+
+    #print(instr.read(1).decode())
     
 
 #for lab computer:
 #port = 'COM8'
 
 port = '/dev/tty.usbserial-110'
-num_x_sweeps = 3
+num_x_sweeps = 5
 
 myInstr = Instrument(port)
 
 # Send initialization string to move to initial position and zero
 
 #CODE
-#initialize_position(myInstr)
-#mov_list = create_mov_list(num_x_sweeps)
-#move_and_collect_data(myInstr,mov_list) 
-
+check_pos(myInstr)
+initialize_position(myInstr)
+print(check_if_ready(myInstr))
+check_pos(myInstr)
+mov_list = create_mov_list(num_x_sweeps, x_inc=10)
+print(mov_list)
+move_and_collect_data(myInstr,mov_list) 
 
 
 #TESTING
@@ -157,13 +170,13 @@ myInstr = Instrument(port)
 #check_x_pos(myInstr)
 #
 #myInstr.write(ascii_convert('F,C,IA1M40000,R'))
+#myInstr.write(ascii_convert('F,C,I1-400,R'))
+#initialize_position(myInstr)
 #print(check_if_ready(myInstr))
 #check_x_pos(myInstr)
 #myInstr.write(ascii_convert('F,C,I1M-4000,R'))
 #print(check_if_ready(myInstr))
 #check_x_pos(myInstr)
-
-check_x_pos(myInstr)
 
 #kill(myInstr)
 
