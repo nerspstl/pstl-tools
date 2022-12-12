@@ -25,5 +25,9 @@ def scanDAQRESVDC(daq,slot,channel):
     vr=scanDAQ(daq,slot,channel,daq.getVDC)
     return r,vr
 
+def scanDAQRES(daq,slot,channel):
+    r=scanDAQ(daq,slot,channel,daq.getRes)
+    return r
+
 def scanDAQVDC(daq,slot,channel):
     return scanDAQ(daq,slot,channel,daq.getVDC)

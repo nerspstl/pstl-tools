@@ -1,5 +1,4 @@
-
-from pstl.instruments.daq.agilent import channel
+from pstl.instruments.daq.agilent.channels import Channel
 
 def loop_setup(channels,chtype,slot=None):
     nchannels = int(len(channels)-1)
@@ -35,7 +34,7 @@ def __loop_single(channels,chtype,slot=None):
             loc = int(slot*100 + k)
         except:
             loc = int(k)
-        channels[k] = channel.CHANNEL(loc,chtype)
+        channels[k] = Channel(loc,chtype)
     return channels
 
 def __loop_multi(channels,chtypes,slot=None):
@@ -48,5 +47,5 @@ def __loop_multi(channels,chtypes,slot=None):
         except:
             loc = int(k)
         chtype = chtypes[k-1]
-        channels[k] = channel.CHANNEL(loc,chtype)
+        channels[k] = Channel(loc,chtype)
     return channels

@@ -2,7 +2,7 @@ from pstl.instruments.daq import agilent
 
 def open_port(port=None):
 
-    instrument=agilent.gpib.Agilent34970A(port)
+    instrument=agilent.models.Agilent34970A(port)
 
     return instrument
 

@@ -2,14 +2,14 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
 import datetime as dt
-from pstl.instruments.daq.agilent.gpib import Agilent34970A as DAQ
+from pstl.instruments.daq.agilent.models import Agilent34970A as DAQ
 
-class ALARM():
+class Alarm():
     def __init__(self,upper=130,lower=105):
         self.upper=upper
         self.lower=lower
 
-class SUBPLOT():
+class Subplot():
     def __init__(self,ax,location=None):
         self.ax=ax
         self.location=location
@@ -17,10 +17,10 @@ class SUBPLOT():
         self.y=[]
 
         self.ylim=[95,135]
-        self.alarm=ALARM()
+        self.alarm=Alarm()
 
 
-class MONITOR():
+class Monitor():
     def __init__(self,nrows,ncols):
         self.nrows=nrows
         self.ncols=ncols
@@ -36,7 +36,7 @@ class MONITOR():
         subplot=[None]*nax
         r=[None]*nax
         for k in range(nax):
-            subplot[k]=SUBPLOT(ax[k],int(112+k))
+            subplot[k]=Subplot(ax[k],int(112+k))
         self.subplot=subplot
 
         #daq=DAQ("GPIB0::10::INSTR")
@@ -106,7 +106,7 @@ class MONITOR():
 
 
 def monitor():
-    temperatures=MONITOR(3,3)
+    temperatures=Monitor(3,3)
     print("monitoring...")
     temperatures.monitor()
 

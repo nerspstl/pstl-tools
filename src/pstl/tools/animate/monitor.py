@@ -55,6 +55,16 @@ class Subplot():
         self.updateline=kwargs.get('updateline',False)
         self.updateline_kwargs=kwargs.get('updateline_kwargs',None)
 
+        # # or list to show an vline
+        # for vline_kwargs must be a dictionary
+        self.axvline=kwargs.get('axvline',None)
+        self.axvline_kwargs=kwargs.get('axvline_kwargs',None)
+
+        # either # or list to show an hline
+        # for hline_kwargs must be a dictionary
+        self.axhline=kwargs.get('axhline',None)
+        self.axhline_kwargs=kwargs.get('axhline_kwargs',None)
+
         # reorder data wrt x data
         self.reorderx=kwargs.get("reorderx",False)
 
@@ -73,6 +83,8 @@ class Subplot():
 
 class Figure():
     def __init__(self,nrows:int=1,ncols:int=1,**kwargs):
+        # extract out subplot_kw
+        subplot_kws=kwargs.get('subplot_kw',None)
         # for figure subplot, determins how many rows and cols
         self.nrows=kwargs.get('nrows',nrows)
         self.ncols=kwargs.get('ncols',ncols)
@@ -100,8 +112,19 @@ class Figure():
         self.nax=nax
         # initialize list of subplots
         subplot=[None]*nax
+        # make subplot based on inputed keyword arguments
         for k in range(nax):
-            subplot[k]=Subplot(ax[k],**kwargs)
+            if subplot_kws is not None and \
+                    isinstance(subplot_kws,(list,np.ndarray,tuple)):
+                        subplot[k]=Subplot(ax[k],**kwargs | subplot_kws[k],)
+            elif subplot_kws is not None and\
+                    isinstance(subplot_kws,dict):
+                        subplot[k]=Subplot(ax[k],**kwargs | subplot_kws)
+            elif subplot_kws is None:
+                subplot[k]=Subplot(ax[k],**kwargs)
+            else:
+                raise TypeError("'subplot_kw' type ",type(subplot_kws),
+                        " is not a known type")
         self.subplot=subplot
 
     ## This function is called periodically from FuncAnimation
@@ -131,17 +154,34 @@ class Figure():
             # if,else if fargs need to be passed in
             if data is None:
                 if subplot.fargs is not None:
-                    out = subplot.func(k,*subplot.fargs)
+                    out = subplot.func(*subplot.fargs)
                 else:
-                    out=subplot.func(k)
+                    out=subplot.func()
             else:
                 if subplot.fargs is not None:
                     out = subplot.func(k,data,*subplot.fargs)
                 else:
                     out=subplot.func(k,data)
-            x_out=out.get('x_out',None)
-            y_out=out.get('y_out',None)
-            subplot.fargs=out.get('fargs_out',None)
+
+            # sort returned values
+            if isinstance(out,dict):
+                x_out=out.get('x_out',None)
+                y_out=out.get('y_out',None)
+                subplot.fargs=out.get('fargs_out',None)
+            elif isinstance(out,(list,np.ndarray,tuple)):
+                if len(out)>=3:
+                    raise IndexError("Too many returned values from %s"%(subplot.func))
+                elif len(out)==2:
+                    raise ValueError("Two arguments returned. Please return one (y) or three (x,y,fargs_update)")
+                elif len(out)==1:
+                    y_out=out[0]
+                else:
+                    x_out=out[0]
+                    y_out=out[1]
+                    suplot.fargs=out[2]
+            else:
+                y_out=out
+
 
             # If x-axis is time, then t_out will be used for x_out
             if subplot.start_time is not False:
@@ -209,6 +249,26 @@ class Figure():
             else:
                 pass
 
+            # Plot axvline if given single number or list
+            if subplot.axvline is not None:
+                if isinstance(subplot.axvline,(list,np.ndarray,tuple)) and \
+                        isinstance(subplot.axvline_kwargs,(list,np.ndarray,tulpe)):
+                            for axvline,kws in zip(subplot.axvline,subplot.axvline_kwargs):
+                                ax.axvline(axvline,**kws)
+                else: 
+                    ax.axvline(subplot.axvline,**subplot.axvline_kwargs)
+
+            # Plot axhline if given single number or list
+            if subplot.axhline is not None:
+                if isinstance(subplot.axhline,(list,np.ndarray,tuple)) and \
+                        isinstance(subplot.axhline_kwargs,(list,np.ndarray,tulpe)):
+                            for axhline,kws in zip(subplot.axhline,subplot.axhline_kwargs):
+                                ax.axhline(axhline,**kws)
+                else: 
+                    ax.axhline(subplot.axhline,**subplot.axhline_kwargs)
+
+
+
             # Update the class x,y with the new xs,ys
             subplot.x=xs
             subplot.y=ys
@@ -218,10 +278,16 @@ class Figure():
             if subplot.rotate_xaxis_labels is not False:
                 ax.tick_params(axis='x',labelrotation=subplot.rotate_xaxis_labels)
             #ax.set_xticklabls(ax.get_xticks(),rotation=45)
-            ax.set(title=subplot.title)
+            if callable(subplot.title):
+                subplot.title(ax)
+            else:
+                ax.set(title=subplot.title)
             ax.set(xlabel=subplot.xlabel)
             ax.set(ylabel=subplot.ylabel)
-            if subplot.ylimit_style == 'magnitude' or\
+            # set up ylimits
+            if callable(subplot.ylimit_style):
+                subplot.ylimit_stlye(ax,*subplot.ylimit)
+            elif subplot.ylimit_style == 'magnitude' or\
                     subplot.ylimit_style == 'm':
                         if subplot.ylimit is not None:
                             y_max=max(ys);y_min=min(ys)
@@ -260,6 +326,8 @@ class Figure():
                                 error_msg="\nERROR: '%s' is not a list, float or int\nit is a %s"%(str(subplot.ylimit),str(type(subplot.ylimit))) 
                                 print(error_msg)
                             ax.set(ylim=[ylimit_min,ylimit_max])
+            else:
+                pass
                             
     ## Callable function that animates the plot and calls _animate
     def monitor(self,**kwargs):

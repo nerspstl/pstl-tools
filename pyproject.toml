@@ -23,18 +23,20 @@ dependencies = [
     "numpy",
     "matplotlib>=3.5.2",
     "pyvisa",
+    "pyserial",
 ]
 requires-python = ">=3.9"
 
 [project.optional-dependencies]
-dev = ["pip-tools","pyvisa-py","pyserial","alicat"]
+dev = ["pip-tools","pyvisa-py","alicat"]
 
 [project.urls]
 Homepage = "https://github.com/tyjoto/pstl-tools"
 
 [project.scripts]
 #ipe = "ipe.__main__:main"
-janus_langmuir_wall = "pstl.scripts.janus.probes.langmuir.wall.__main__:main"
+janus_langmuir_wall 	= "pstl.scripts.janus.probes.langmuir.wall.__main__:main"
+monitor_bakeout		= "pstl.scripts.monitor.bakeout.__main__:main"
 
 [tool.bumpver]
 current_version = "0.1.0"

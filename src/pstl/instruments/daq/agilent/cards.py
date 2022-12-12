@@ -1,4 +1,3 @@
-
 from pstl.instruments.daq.agilent import cardsetuploop as sul
 
 class Agilent34901A():

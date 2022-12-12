@@ -1,7 +1,7 @@
 from pstl.instruments.daq.agilent import commands as cmds
 
 
-class CHANNEL():
+class Channel():
     def __init__(self,location,chtype="VDC"):
         self.location=location
         self.change(location,chtype)

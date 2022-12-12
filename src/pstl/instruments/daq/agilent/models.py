@@ -1,13 +1,13 @@
 import math
 
-from pstl.protocol.gpib.pyvisa import Open
-from pstl.instruments.daq.agilent import cards
-from pstl.instruments.daq.agilent import commands as cmds
+from pstl.protocol.pyvisa           import Pyvisa
+from pstl.instruments.daq.agilent   import cards
+from pstl.instruments.daq.agilent   import commands as cmds
 
-class Agilent34970A(Open):
+class Agilent34970A(Pyvisa):
     def __init__(self,port=None):
 
-        Open.__init__(self,port)
+        Pyvisa.__init__(self,port)
 
         self.class_name="agilent34970A"
         self.type="daq"

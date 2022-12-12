@@ -1,7 +1,7 @@
-from pstl.protocol.gpib.pyvisa import Open
-from pstl.instruments.ps.kepco import commands as cmds
+from pstl.protocol.pyvisa       import Pyvisa
+from pstl.instruments.ps.kepco  import commands as cmds
 
-class BOP(Open):
+class BOP(Pyvisa):
     """
     class for kepco bipolar operational DC power supply using ieee 488B gpib
 
@@ -9,7 +9,7 @@ class BOP(Open):
     """
     def __init__(self,port=None,**kwargs):
 
-        Open.__init__(self,port)
+        Pyvisa.__init__(self,port)
 
         self.ieee=kwargs.get("ieee","")
         self.class_name=kwargs.get('class_name','kepco_BOP')
@@ -31,6 +31,17 @@ class BOP_100_1M(BOP):
         kwargs['class_name']=kwargs.get('class_name','kepco_BOP_100_1M')
         kwargs['name']=kwargs.get('name',kwargs['class_name'])
         kwargs['vmax']=100;kwargs['imax']=1
+        BOP.__init__(self,port,**kwargs)
+
+class BOP_100_2D(BOP):
+    """
+    Builds off the BOP class adds vmax=100 [V] and imax=2 [A]
+    """
+    def __init__(self,port=None,**kwargs):
+
+        kwargs['class_name']=kwargs.get('class_name','kepco_BOP_100_1D')
+        kwargs['name']=kwargs.get('name',kwargs['class_name'])
+        kwargs['vmax']=100;kwargs['imax']=2
         BOP.__init__(self,port,**kwargs)
 
 class BOP_100_1M_488B(BOP_100_1M):
@@ -132,3 +143,17 @@ class BOP_100_1M_488B(BOP_100_1M):
                 polarity=-1
                 current=abs(current)
         self.write(self.getCMDCurrent(float(current),polarity,**kwargs))
+
+
+class BOP_100_2D_802E(BOP_100_1M):
+    """
+    Builds off the BOP_100_1D class adds ieee=802E
+    """
+    def __init__(self,port=None,**kwargs):
+
+        kwargs['class_name']=kwargs.get('class_name','kepco_BOP_100_1D_802E')
+        kwargs['name']=kwargs.get('name',kwargs['class_name'])
+        kwargs['ieee']='802E'
+        BOP_100_1M.__init__(self,port,**kwargs)
+
+
