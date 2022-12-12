@@ -87,5 +87,5 @@ class Open():
 
         self.write=self.resource.write
         self.read=self.resource.read
-        self.close=self.resource.close
-        self.open=self.resource.open
+        #self.close=self.resource.close
+        #self.open=self.resource.open
