@@ -6,9 +6,10 @@ class Pyvisa(Open):
     def __init__(self,port=None,**kwargs):
         # save protocal type
         self.protocol="pyvisa"
+        visa=kwargs.get('visa','')
 
         # create functions to list and open pyvisa compatibile components
-        rm=ResourceManager()
+        rm=ResourceManager(visa)
         list_resources=rm.list_resources
         open_resource=rm.open_resource
 

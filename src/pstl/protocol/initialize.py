@@ -43,13 +43,20 @@ def choose_port(list_resources,open_resource,resource_kws={}):
             strin = input("Enter Option #:\n>>")
         # end of refresh
         try:
-            port = listed_resources[int(strin)-1]
+            value=int(strin)
+            port = listed_resources[value-1]
+        except ValueError:
+            port = strin
         except:
             print("Not a valid entry please try again")
             strin="R"
 
-    print('Trying ' + port)
-    resource=open_port(port,open_resource,resource_kws)
+    try:
+        print('Trying ' + port)
+        resource=open_port(port,open_resource,resource_kws)
+    except:
+        print('Failed ' + port)
+        resource=choose_port(list_resources,open_resource,resource_kws)
     print('\nFound:')
     print(resource)
     return resource
