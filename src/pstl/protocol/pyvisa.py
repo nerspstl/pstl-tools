@@ -11,6 +11,9 @@ class Pyvisa(Open):
         # create functions to list and open pyvisa compatibile components
         rm=ResourceManager(visa)
         list_resources=rm.list_resources
+        kwargs.setdefault(
+                'list_resources_kws',{'query':'?*'}
+                )
         open_resource=rm.open_resource
 
         # initialize port
