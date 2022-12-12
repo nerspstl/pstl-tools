@@ -20,23 +20,6 @@ import math
 # positive for I1 is towards the wall
 
 
-# start data, run x, stop data, run y
-# start data, run x, stop data, run y...
-# data collection
-# start data collection right before movement start
-# how to end data collection right 
-# then store matrix?? or get at very end??
-
-# input port, number of x_sweeps
-# optional inputs y_start, y_increment, x_start, x_increments
-
-# send initialization string to turn on and move to initial position
-# create a string for every x and y move
-# interspace start and stop data commands 
-#      check if still moving before doing anything like this
-# store data collection
-
-
 #-------------#
 class Instrument:
     def __init__(self, port):
@@ -71,8 +54,10 @@ def check_if_ready(instr):
 
 def initialize_position(instr,y_start = '-0',x_start = '-0'):  
 
-    init_str = 'F,C,' + 'I1M' + str(x_start) + ',IA1M-0' + ',I2M' + str(y_start) + ',IA2M-0' +',R'
-    #init_str = 'F,C,' + 'I3M' + str(x_start) + ',IA3M-0' + ',I2M' + str(y_start) + ',IA2M-0' +',R'
+    #init_str = 'F,C,' + 'I1M' + str(x_start) + ',IA1M-0' + ',I2M' + str(y_start) + ',IA2M-0' +',R
+
+    #Switched to motor 3
+    init_str = 'F,C,' + 'I3M' + str(x_start) + ',IA3M-0' + ',I2M' + str(y_start) + ',IA2M-0' +',R'
     instr.write(ascii_convert(init_str))  
     
 
@@ -81,11 +66,12 @@ def create_mov_list(x_sweeps,y_inc = 10,x_inc = 0):
     y_inc = math.floor(y_inc/0.0025)
     x_inc = math.floor(x_inc/0.0025)
 
-    x_p = 'F,C,' + 'I1M' + str(x_inc) + ',R'
-    x_n = 'F,C,' + 'I1M-' + str(x_inc) + ',R'
+    #x_p = 'F,C,' + 'I1M' + str(x_inc) + ',R'
+    #x_n = 'F,C,' + 'I1M-' + str(x_inc) + ',R'
 
-    #x_p = 'F,C,' + 'I3M' + str(x_inc) + ',R'
-    #x_n = 'F,C,' + 'I3M-' + str(x_inc) + ',R'
+    #Switched to motor 3
+    x_p = 'F,C,' + 'I3M' + str(x_inc) + ',R'
+    x_n = 'F,C,' + 'I3M-' + str(x_inc) + ',R'
 
     y_p = 'F,C,' + 'I2M' + str(y_inc) + ',R'
 
@@ -156,15 +142,14 @@ myInstr = Instrument(port)
 # Send initialization string to move to initial position and zero
 
 #CODE
-#check_pos(myInstr)
-#initialize_position(myInstr)
-#print(check_if_ready(myInstr))
-#myInstr.write(ascii_convert('F,C,I1M4000,R'))
-#check_pos(myInstr)
-#mov_list = create_mov_list(num_x_sweeps, x_inc=10)
-#mov_list = create_mov_list(num_x_sweeps)
-#print(mov_list)
-#move_and_collect_data(myInstr,mov_list) 
+check_pos(myInstr)
+initialize_position(myInstr)
+print(check_if_ready(myInstr))
+myInstr.write(ascii_convert('F,C,I1M4000,R'))
+check_pos(myInstr)
+mov_list = create_mov_list(num_x_sweeps)
+print(mov_list)
+move_and_collect_data(myInstr,mov_list) 
 
 
 #Testing for video
@@ -180,29 +165,8 @@ myInstr = Instrument(port)
 #myInstr.write(ascii_convert('F,C,I3M-4000,R'))
 
 #myInstr.write(ascii_convert('F,C,I1M4000,I1M-4000,I1M4000,I1M-4000,R'))
-
-myInstr.write(ascii_convert('F,C,I3M-0,I3M0,R'))
-
 #myInstr.write(ascii_convert('F,C,I3M-4000,I3M4000,I3M-4000,I3M4000,I3M-4000,R'))
-#myInstr.write(ascii_convert('F,C,I3M-4000,R'))
 
-#TESTING
-#myInstr.write(ascii_convert('F,C,I1M-0,R'))
-#print(check_if_ready(myInstr))
-#check_x_pos(myInstr)
-#
-#myInstr.write(ascii_convert('F,C,IA1M-0,R'))
-#print(check_if_ready(myInstr))
-#check_x_pos(myInstr)
-#
-#myInstr.write(ascii_convert('F,C,IA1M40000,R'))
-#myInstr.write(ascii_convert('F,C,I1-400,R'))
-#initialize_position(myInstr)
-#print(check_if_ready(myInstr))
-#check_x_pos(myInstr)
-#myInstr.write(ascii_convert('F,C,I1M-4000,R'))
-#print(check_if_ready(myInstr))
-#check_x_pos(myInstr)
 
 #kill(myInstr)
 
