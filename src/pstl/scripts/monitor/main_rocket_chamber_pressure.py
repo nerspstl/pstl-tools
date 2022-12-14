@@ -23,6 +23,7 @@ def warning_send(s,attempt:str=None):
     msgtype="warning"
 
     groupname='rocket'
+    #groupname='test'
 
     center.contact_group(Sender,body,groupname,'all',subject=subject)
 
@@ -36,6 +37,7 @@ def update_send(s):
     msgtype="info"
 
     groupname='rocket'
+    #groupname='test'
 
     center.contact_group(Sender,body,groupname,'email',subject=subject)
 
@@ -268,6 +270,13 @@ def loop(args):
 
     return p,fargs
 
+def setTitle(k,ax):
+    line=ax.lines[0]
+    data=line.get_ydata()
+    avg=np.average(data)
+    s='Inficon BPG402S Pressure: %.2e torr'%(avg)
+    ax.set(title=s)
+
 
 def main():
     logname=setup_loggit()
@@ -297,7 +306,7 @@ def main():
             now_last_update,logicReset,pressureLimit,gas,ser)
     inficon_pressure=monitor.Monitor(1,1,\
             xlabel='time [s]',ylabel='pressure [torr]',\
-            title='Inficon BPG402S Pressure',alerts=False,\
+            title=setTitle,alerts=False,\
             func=loop,fargs=(fargs),start_time=True,\
             ylimit_style='m',ylimit=[-1,1],logy=False
             )

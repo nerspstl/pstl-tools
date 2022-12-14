@@ -117,7 +117,10 @@ class Monitor():
             ax.grid(True)
             ax.tick_params(axis='x',labelrotation=45)
             #ax.set_xticklabls(ax.get_xticks(),rotation=45)
-            ax.set(title=self.subplot[k].title)
+            if callable(self.subplot[k].title):
+                self.subplot[k].title(k,ax)
+            else:
+                ax.set(title=self.subplot[k].title)
             ax.set(xlabel=self.subplot[k].xlabel)
             ax.set(ylabel=self.subplot[k].ylabel)
             if self.subplot[k].ylimit_style == 'magnitude' or\
