@@ -72,7 +72,7 @@ class Open():
         if port is not None:
             try:
                 res=open_port(port,open_resource,
-                        resource_kw
+                        resource_kws
                         )
             except:
                 print("\nFailed to open %s"%(port))
