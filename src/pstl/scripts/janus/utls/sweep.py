@@ -22,23 +22,42 @@ def update(k,data,*args):
             } 
     return out
 
+def update_trace(k,data,*args):
+    # k==channel, aka subplot axes
+    vprobe=np.array(data[0])
+    current=np.array(data[1])
+    # choose channel data to output
+    x_out=vprobe[:,k]
+    y_out=current[:,k]
 
-def scan(j,ps,daq,slot,channels,voltages,resistance,voltage_delay,manual=False):
+    #update any out put args (none here)
+    args_out=args
+    out={
+            'x_out':x_out,
+            'y_out':y_out,
+            'args_out':args_out
+            } 
+    return out
+    
+
+
+def scan(j,ps,daq,slot,channels,voltages,resistance,voltage_delay,
+        manual=False,debug=False,silent=False):
     # j==which iteration of _animate -> jj==which voltage
     lenv=len(voltages)
     jj=np.remainder(j,lenv)
-    # then this round of voltage is
-    v=voltages[jj]
+    # then this round of target voltage source is
+    vt=voltages[jj]
     # set power supply voltage
     if manual is True:
         rstr='R'
         while rstr.upper()=='R':
-            temp=input("\nPress enter once PS Voltage set to %f>>"%(v))
+            temp=input("\nPress enter once PS Voltage set to %f>>"%(vt))
             vreturned=scanDAQVDC(daq,slot,[channels[0]])
             print("Measured V_ps: %f"%(vreturned))
             rstr=input("Press anything to continue or 'R' to retry>>")
     else:
-        ps.setVoltage(v)
+        ps.setVoltage(vt)
     # if voltage_delay
     if voltage_delay is not None:
         time.sleep(voltage_delay)
@@ -59,12 +78,31 @@ def scan(j,ps,daq,slot,channels,voltages,resistance,voltage_delay,manual=False):
     vps=v[0]
     vr=v[1:]
 
-    print(j)
-    print(vps,vr)
+    if silent == False:
+        print("step:\t",j)
+        print("Target Source Voltage:\t",vt)
+        print("Mesaured Source Voltage:\t",vps)
+
     # perfrom lang analysis
     vprobe,current=lang_calc(vps,vr,r)
 
-    print(vprobe,current)
-    print()
+    if debug== True and silent==False:
+        print("Voltage Drop:\t",vr)
+        print("Voltage Probe:\t",vprobe)
+        print("Current:\t",current)
+    if silent==False:
+        print()
+    return vprobe,current
+
+def trace(j,ps,daq,slot,channels,voltages,resistance,voltage_delay,
+        manual=False,debug=False):
+    vprobe=[]
+    current=[]
+    for jj in range(len(voltages)):
+        vprobe_k,current_k=scan(jj,ps,daq,slot,channels,voltages,resistance,
+                voltage_delay,manual=manual,debug=debug,silent=True)
+        vprobe.append(vprobe_k)
+        current.append(current_k)
+
     return vprobe,current
     

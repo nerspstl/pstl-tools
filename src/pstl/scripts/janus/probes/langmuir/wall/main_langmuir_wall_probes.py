@@ -4,7 +4,7 @@ import json
 import numpy as np
 
 from pstl.instruments.daq.agilent.models    import Agilent34970A as DAQ
-from pstl.instruments.ps.kepco.models       import BOP_100_1M_488B as PS
+from pstl.instruments.ps.kepco.models       import BOP_100_2D_802E as PS
 from pstl.tools.animate.monitor             import Figure as FIG 
 from pstl.scripts.janus.utls                import sweep
 from pstl.scripts.janus.utls.agilent        import scanDAQRESVDC
@@ -25,6 +25,7 @@ def get_parameters(fname=None):
         daq_slot=1
         ps_channel=[1]
         r_channel=[2,9,10,11,12]
+        probe_locations=[0,10,40,100,133]   # [cm]
         #r_channel=[2]
         channels=ps_channel+r_channel
         resistance=True
@@ -33,6 +34,8 @@ def get_parameters(fname=None):
         vstop=30
         dv=1
         supply_voltages=np.arange(vstart,vstop+dv,dv)
+        style='step'
+        #style='trace'
         params={
                 'voltage_delay':voltage_delay,
                 'daq_slot':daq_slot,
@@ -41,10 +44,17 @@ def get_parameters(fname=None):
                 'channels':channels,
                 'resistance':resistance,
                 'supply_voltages':supply_voltages,
-                'manual':True
+                'manual':False,
+                'debug':True,
+                'probe_locations':probe_locations,
+                'style':style
                 }
     return params
 
+def setTitle(k,ax,probe_location):
+    i=k+1
+    s="Probe %i: @%icm"%(i,probe_location[k])
+    ax.set(title=s)
 
 
 def main():
@@ -62,6 +72,8 @@ def main():
     ncols=params.get("ncols",1)
     save=params.get("save",True)
     manual=params.get("manual",False)
+    debug=params.get("debug",False)
+    style=params.get("style","step")
 
     # check required inputs and raise error if not provided
     if channels is None: 
@@ -77,17 +89,34 @@ def main():
     if manual is True:
         ps=None
     else:
-        ps=PS("GPIB0::6::INSTR")
+        # for GPIB
+        #ps=PS("GPIB0::6::INSTR")
+        # for socket
+        ps=PS("TCPIP0::ners-plasma-kepco.engin.umich.edu::5025::SOCKET")
 
     # setup figure for data
+    if style.upper()=="STEP":
+        updatelimit=len(supply_voltages)
+        update_func=sweep.update
+        get_data_func=sweep.scan
+        updateline=True
+    elif style.upper()=="TRACE":
+        updatelimit=1
+        update_func=sweep.update_trace
+        get_data_func=sweep.trace
+        updateline=False
+    else:
+        raise ValueError("Not a known style '%s'"%(style))
+
     kwargs={
-            "func":sweep.update,
-            "xlabel":"V [V]",
-            "ylabel":"I [A]",
-            "updatelimit":len(supply_voltages),
+            "func":update_func,
+            "xlabel":"Voltage [V]",
+            "ylabel":"Current [A]",
+            "updatelimit":updatelimit,
             "reorderx":True,
-            "updateline":True,
-            "full_screen":True
+            "updateline":updateline,
+            "full_screen":True,
+            "title":setTitle
             }
     langmuir=FIG(nrows,ncols,**kwargs)
     """
@@ -118,10 +147,14 @@ def main():
         args=(ps,daq,daq_slot,channels,
                 supply_voltages,resistance,
                 voltage_delay,
-                manual)
+                manual,debug)
+        # animate kwargs dict
+        animate_kwargs={
+                'title_args':(params['probe_locations'],),
+                }
         # pass dict to monitor for animate function
         kwargs={
-                "fargs":(sweep.scan,args)
+                "fargs":(get_data_func,args,animate_kwargs)
                 }
         langmuir.monitor(**kwargs)
     except KeyboardInterrupt:
@@ -129,7 +162,8 @@ def main():
     if manual is True:
         pass
     else:
-        ps.setVoltage(0)
+        #ps.setVoltage(0)
+        ps.close()
     exit_handler(save,langmuir)
 
 

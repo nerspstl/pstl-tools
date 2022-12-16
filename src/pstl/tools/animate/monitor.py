@@ -128,7 +128,7 @@ class Figure():
         self.subplot=subplot
 
     ## This function is called periodically from FuncAnimation
-    def _animate(self, i, func=None, fargs=None):
+    def _animate(self, i, func=None, fargs=None,kwargs={}):
 
         # This additional function allows data to be collect first
         # and then the function attached to the figure sort the data
@@ -218,8 +218,21 @@ class Figure():
 
             # Restricts x and y lists to last 20 items
             if subplot.updatelimit is not None:
-                xs = xs[-int(subplot.updatelimit):]
-                ys = ys[-int(subplot.updatelimit):]
+                try:
+                    _=iter(xs[-1])
+                    _=iter(ys[-1])
+
+                    # pass so cont
+                    if subplot.updatelimit==1:
+                        xs=list(xs[-1])
+                        ys=list(ys[-1])
+                    else:
+                        xs = xs[-int(subplot.updatelimit):]
+                        ys = ys[-int(subplot.updatelimit):]
+                        
+                except TypeError:
+                    xs = xs[-int(subplot.updatelimit):]
+                    ys = ys[-int(subplot.updatelimit):]
             else:
                 pass
 
@@ -279,14 +292,14 @@ class Figure():
                 ax.tick_params(axis='x',labelrotation=subplot.rotate_xaxis_labels)
             #ax.set_xticklabls(ax.get_xticks(),rotation=45)
             if callable(subplot.title):
-                subplot.title(ax)
+                subplot.title(k,ax,*kwargs.get('title_args',(None,)))
             else:
                 ax.set(title=subplot.title)
             ax.set(xlabel=subplot.xlabel)
             ax.set(ylabel=subplot.ylabel)
             # set up ylimits
             if callable(subplot.ylimit_style):
-                subplot.ylimit_stlye(ax,*subplot.ylimit)
+                subplot.ylimit_stlye(k,ax,*subplot.ylimit)
             elif subplot.ylimit_style == 'magnitude' or\
                     subplot.ylimit_style == 'm':
                         if subplot.ylimit is not None:
@@ -328,6 +341,7 @@ class Figure():
                             ax.set(ylim=[ylimit_min,ylimit_max])
             else:
                 pass
+            plt.tight_layout()
                             
     ## Callable function that animates the plot and calls _animate
     def monitor(self,**kwargs):
