@@ -37,7 +37,7 @@ Homepage = "https://github.com/nerspstl/pstl-tools"
 [project.scripts]
 #ipe = "ipe.__main__:main"
 janus_langmuir_wall = "pstl.scripts.janus.probes.langmuir.wall.__main__:main"
-gui_langmuir = "pstl.scripts.test.test_gui_langmuir.__main__:main"
+gui_langmuir = "pstl.scripts.test.test_gui_langmuir:main"
 
 [tool.bumpver]
 current_version = "0.1.0"
