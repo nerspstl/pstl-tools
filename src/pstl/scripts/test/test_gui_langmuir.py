@@ -1,4 +1,5 @@
 import tkinter as tk
+import argparse
 
 import numpy as np
 import pandas as pd
@@ -16,6 +17,13 @@ from pstl.diagnostics.probes.langmuir.single.analysis.solver import SingleLangmu
 
 style.use("bmh")
 
+parser = argparse.ArgumentParser(
+                    prog='GUI Langmuir',
+                    description='Anaylsis on IV-trace',
+                    epilog='Text at the bottom of help')
+parser.add_argument('-s','--sname', help="save name for plots", default="outpng.png")
+parser.add_argument('-f','--fname', help="file name to read in", default="lang_data.txt")
+args = parser.parse_args()
 
 def old_main():
     x = np.linspace(-.2, .2, 9)
@@ -46,7 +54,7 @@ def old_main():
 
 
 def get_lang_data():
-    filename = "lang_data.txt"
+    filename = args.fname
     data = pd.read_csv(filename, names=["voltage", "current"])
     data.iloc[:, 1] *= -1
     return data
@@ -61,7 +69,7 @@ def main():
     page.pack()
 
     # create Canvas
-    canvas = Canvas(page, saveas="test_gui.png", width=5, height=4)
+    canvas = Canvas(page, saveas=args.sname, width=5, height=4)
     canvas.grid(row=0, column=1, sticky="NSWE", rowspan=2)
 
     # create Panel
