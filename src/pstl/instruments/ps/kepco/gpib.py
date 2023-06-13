@@ -1,4 +1,4 @@
-from pstl.protocol.gpib.pyvisa import Open
+from pstl.utls.protocol.gpib.pyvisa import Open
 from pstl.instruments.ps.kepco import commands as cmds
 
 class BOP(Open):

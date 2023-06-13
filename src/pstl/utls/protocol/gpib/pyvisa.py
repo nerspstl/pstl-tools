@@ -1,4 +1,4 @@
-from pstl.protocol.gpib import initialize as init
+from pstl.utls.protocol.gpib import initialize as init
 
 class Open():
     def __init__(self,port=None):
