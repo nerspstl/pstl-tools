@@ -16,7 +16,7 @@ Python scripts for making working with UMICH NERS PSTL Lab Equipment much easier
 2. Run in command line
 
 ```
-python -m venv <name-of-your-venv> <path/to/directory/to/store/venvs>
+python -m venv <path/to/directory/to/store/venvs/your-venv>
 ```
 
 Replace python with the python version you want to use i.e. ```python3.10```
