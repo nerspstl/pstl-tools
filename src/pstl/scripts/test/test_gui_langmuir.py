@@ -70,7 +70,7 @@ def main():
     page.pack()
 
     # create Canvas
-    canvas = Canvas(page, saveas=args.sname, width=5, height=4)
+    canvas = Canvas(page, saveas=args.sname, width=4, height=3)
     canvas.grid(row=0, column=1, sticky="NSWE", rowspan=2)
 
     # create Panel
