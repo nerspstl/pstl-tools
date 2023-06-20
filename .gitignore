@@ -135,6 +135,9 @@ dmypy.json
 old/
 
 # contacts
-src/pstl/contacts/individuals/*.json
-src/pstl/contacts/groups/*.json
-src/pstl/tools/alerts/logs/*
+src/pstl/utls/contacts/individuals/*.json
+src/pstl/utls/contacts/groups/*.json
+src/pstl/utls/tools/alerts/logs/*
+
+# .vscode
+.vscode

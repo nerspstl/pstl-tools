@@ -1,6 +1,8 @@
-import math
+from typing import Any
 
-from pstl.protocol.gpib.pyvisa import Open
+import numpy as np
+
+from pstl.utls.protocol.gpib.pyvisa import Open
 from pstl.instruments.daq.agilent import cards
 from pstl.instruments.daq.agilent import commands as cmds
 
@@ -14,7 +16,7 @@ class Agilent34970A(Open):
 
         self.name=self.query("*IDN?")
 
-        card = [None]*4    # three potential cards and 0 is list cards
+        card : list[Any] = [None]*4    # three potential cards and 0 is list cards
         card[0]=self.list_cards
         self.card=card
     
@@ -60,7 +62,7 @@ class Agilent34970A(Open):
         """
         if channel is None:
             loc=location
-            location=int(math.floor(loc/100))
+            location=int(np.floor(loc/100))
             channel = int(loc-location*100)
         cmd=self.card[location].channel[channel].getcmd
         return self.query(cmd)

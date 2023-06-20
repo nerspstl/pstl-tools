@@ -1,5 +1,5 @@
 
-from pstl.instruments.daq.agilent import cardsetuploop as sul
+from pstl.instruments.daq.agilent import utls as sul
 
 class Agilent34901A():
     def __init__(self,slot=None,nchannels=20,chtype=None):
