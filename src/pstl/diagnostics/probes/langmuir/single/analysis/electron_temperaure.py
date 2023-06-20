@@ -17,7 +17,7 @@ default_fit_kwargs = {
     'min_points': 5, 'istart': None, 'iend': None, 'invalid': "ignore",
     'fstep': None, 'fstep_type': None, 'fstep_adjust': True, 'fitmax': None,
     'bstep': None, 'bstep_type': None, 'bstep_adjust': True, 'bitmax': None,
-    'threshold_residual': None, 'threshold_rmse': 0.30,
+    'threshold_residual': None, 'threshold_rmse': 0.25,
     'threshold_rsq': 0.95, 'threshold_method': None,
     'convergence_residual_percent': 1.0, 'convergence_rmse_percent': 1.0,
     'convergence_rsq_percent': 1.0, 'convergence_method': None,

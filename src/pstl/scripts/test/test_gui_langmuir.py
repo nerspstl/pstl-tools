@@ -13,6 +13,7 @@ from pstl.gui.langmuir import LinearSemilogySingleLangmuirCombinedData as LSSLCD
 
 from pstl.utls.plasmas import XenonPlasma, ArgonPlasma
 from pstl.diagnostics.probes.langmuir.single import SphericalSingleProbeLangmuir as SSPL
+from pstl.diagnostics.probes.langmuir.single import CylindericalSingleProbeLangmuir as CSPL
 from pstl.diagnostics.probes.langmuir.single.analysis.solver import SingleLangmuirProbeSolver as SLPS
 
 style.use("bmh")
@@ -56,7 +57,7 @@ def old_main():
 def get_lang_data():
     filename = args.fname
     data = pd.read_csv(filename, names=["voltage", "current"])
-    data.iloc[:, 1] *= -1
+    data.iloc[:, 1] *= 1
     return data
 
 
@@ -82,10 +83,11 @@ def main():
     # probe = CSPL(2.4e-3, 10e-3)
     probe = SSPL(0.010, 0.0079)
     probe_smaller = SSPL(0.010, 0.009)
+    rox_probe = CSPL(0.76e-3,2.54e-3)
     plasma = XenonPlasma()
     # plasma = ArgonPlasma()
 
-    solver = SLPS(plasma, probe, data)
+    solver = SLPS(plasma, rox_probe, data)
 
     # pre process data
     solver.preprocess()
