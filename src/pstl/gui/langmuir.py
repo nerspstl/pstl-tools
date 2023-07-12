@@ -137,25 +137,29 @@ class MatplotlibCanvasWToolbar(MatplotlibCanvas):
 
 class MatplotlibCanvasWToolbarSave(MatplotlibCanvasWToolbar):
     def __init__(self, master=None,
-                 cnf=None, *args,
+                 cnf={}, *args,
                  fig: Figure | None = None, ax: Axes | None = None,
-                 saveas: str = "figure1.png",
+                 saveas: str = "figure1.png", stype="png",
                  **kwargs):
         super().__init__(master, cnf, *args, fig=fig, ax=ax, **kwargs)
 
         self.saveas = saveas
+        self.args = args
+        self.kwargs = kwargs
 
         # add save default button
-        self.widgets.buttons['save'] = tk.Button(
-            self, text="Save", command=self.save)
-        self.widgets.buttons['save'].pack(
-            side=tk.TOP, fill=tk.X, expand=True)
+        btn = SaveResults(self.save,fname=saveas,ftype=stype,master=self,cnf=cnf)
+        self.widgets.frames['save'] = btn
+        #    self, text="Save", command=self.save)
+        #self.widgets.buttons['save'].pack(
+        btn.pack(side=tk.TOP, fill=tk.X, expand=True)
+        
 
-    def save(self, saveas: str | None = None, **kwargs):
-        if saveas is None:
-            saveas = self.saveas
-        self.fig.savefig(saveas, **kwargs)
-        print("save to '%s'"%(saveas))
+    def save(self, **kwargs):#, saveas: str | None = None, **kwargs):
+        #if saveas is None:
+        #    saveas = self.widgets.frames['save'].get()
+        self.fig.savefig(self.saveas, **kwargs)
+        print("save to '%s'"%(self.saveas))
 
 
 class LinearSemilogyCanvas(MatplotlibCanvasWToolbarSave):
@@ -186,7 +190,8 @@ class LinearSemilogyDoubleCanvas(tk.Frame):
         width = kwargs.pop("width", 5)
         height = kwargs.pop("height", 4)
         dpi = kwargs.pop("dpi", 100)
-        figure_kw = {'width': width, 'height': height, 'dpi': dpi}
+        stype = kwargs.pop("stype", "png")
+        figure_kw = {'width': width, 'height': height, 'dpi': dpi, 'stype':stype}
 
         super().__init__(master, cnf, **kwargs)
 
@@ -250,6 +255,9 @@ class LinearSemilogyDoubleCanvas(tk.Frame):
 
         self.frame1.save()
         self.frame2.save()
+
+    def save(self):
+        self.save_both()
 
     @staticmethod
     def update_both(func, *args, **kwargs):
@@ -590,6 +598,9 @@ class SingleProbeLangmuirResultsFrame(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
         self.columnconfigure(2, weight=1)
+    
+    def save(self):
+        self.widgets.frames["save"].save()
 
     @property
     def results(self):
@@ -753,7 +764,7 @@ class SingleProbeLangmuirResultsFrame(tk.Frame):
         return self._sort_positions(num_items, num_rows, num_cols)
 
 class SaveResults(tk.Frame):
-    def __init__(self, command, fname=None, ftype=None, master=None, cnf=None, *args,**kwargs):
+    def __init__(self, command, fname=None, ftype=None, master=None, cnf={}, *args,**kwargs):
         super().__init__(master,cnf, *args, **kwargs)
 
         # create widgets
@@ -768,11 +779,14 @@ class SaveResults(tk.Frame):
         # create entry for filename and populate with default
         entry_kwargs = kwargs.get("entry_kwargs", {})
         #entry_kwargs.setdefault()
-        entry = tk.Entry(self, cnf, *entry_kwargs)
+        entry = tk.Entry(self, cnf,**entry_kwargs)
 
         # pack away!
         btn.grid(row=0, column=0, sticky="NSWE")
         entry.grid(row=0, column=1, sticky="NSWE")
+
+        # change column weights
+        self.columnconfigure(1,weight=1)
 
         # store
         self.widgets.buttons["save"] = btn
@@ -789,6 +803,8 @@ class SaveResults(tk.Frame):
             fname = "output.txt"
         entry.insert(0,fname)
 
+    def save(self):
+        self.export_results()
 
     def export_results(self):
         command = self.command
@@ -906,21 +922,19 @@ class ResultOutput(tk.Frame):
 
 
 class CombinedDataFrame(tk.Frame):
-    def __init__(self, Data, Solver, Canvas, Panel, master=None, cnf=None, *args, **kwargs):
-        super().__init__(master, cnf=cnf, *args, **kwargs)
+    def __init__(self, Solver, Canvas, Panel, 
+                 master=None, cnf=None, *args, **kwargs):
         # get kwargs for individual
         canvas_kwargs = kwargs.pop("canvas_kwargs", {})
         panel_kwargs = kwargs.pop("panel_kwargs", {})
         solver_kwargs = kwargs.pop("solver_kwargs", {})
+        super().__init__(master, cnf=cnf, *args, **kwargs)
 
         # set defaults for canvas
         canvas_kwargs.setdefault("width", 5)
         canvas_kwargs.setdefault("height", 4)
 
         # set defaults for panel
-
-        # set defaults for solver
-        solver_kwargs.setdefault("Data", Data)
 
         # make plotting canvas
         self._canvas = Canvas(  # LinearSemilogyDoubleCanvasSingleProbeLangmuir(
@@ -951,15 +965,56 @@ class CombinedDataFrame(tk.Frame):
 
 
 class LinearSemilogySingleLangmuirCombinedData(CombinedDataFrame):
-    def __init__(self, Data: pd.DataFrame, master=None, cnf=None, *args, **kwargs):
+    def __init__(self, plasma, probe, data: pd.DataFrame, master=None, cnf={}, *args, **kwargs):
         Canvas = LinearSemilogyDoubleCanvasSingleProbeLangmuir
         Panel = SingleProbeLangmuirResultsFrame
         Solver = SingleLangmuirProbeSolver
-        super().__init__(Data, Solver, Canvas, Panel, master, cnf=cnf, *args, **kwargs)
+        kwargs.setdefault("solver_kwargs",{})
+        kwargs["solver_kwargs"].update({'Plasma':plasma,'Probe':probe,'Data':data})
+        super().__init__(Solver, Canvas, Panel, master, cnf=cnf, *args, **kwargs)
+        # can call self.canvas, self.panel, self.property
+
+        # solve Trace
+        self.solve()
+
+        # make save and exit button
+        btn_save_n_close = tk.Button(self,cnf=cnf,command=self.save_n_close,text="Save and Close")
+        # make exit button
+        btn_close = tk.Button(self,cnf=cnf,command=self.close,text="close")
+
+        # pack away!
+        btn_save_n_close.grid(row=2,column=0,columnspan=2,sticky="NSWE")
+        btn_close.grid(row=3,column=0,columnspan=2,sticky="NSWE")
+
+        # store
+        self.widgets = Widgets()
+        self.widgets.buttons["save_n_close"] = btn_save_n_close
+        self.widgets.buttons["close"] = btn_close
+    
+    def solve(self):
+        # pre process data
+        self.solver.preprocess()
+
+        # solve for data
+        self.solver.find_plasma_properties()
+
+        # make plots of solved for plasma parameters
+        self.canvas.make_plot(self.solver)
+
+        # pass data to results panel
+        self.panel.results = self.solver.results
+
+    def save_n_close(self):
+        self.panel.save()
+        self.canvas.save()
+        self.close()
+
+    def close(self):
+        self.destroy()
 
 
 class MultipleDataFrame(tk.Frame):
-    def __init__(self, num, DataFrame, master=None, cnf=None, *args, **kwargs):
+    def __init__(self, num, DataFrame, master=None, cnf={}, *args, **kwargs):
         super().__init__(master, cnf=cnf, *args, **kwargs)
 
         self._pages = [None]*num

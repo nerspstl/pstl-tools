@@ -60,8 +60,74 @@ def get_lang_data():
     data.iloc[:, 1] *= -1
     return data
 
+def get_settings():
+    filename = args.sname # Change this
+    # filename (no extentsion) to open
+    fname_split = args.fname.split(".")
+
+    # canvas kwargs
+    ptype = "png"
+    sname = fname_split[0]+"_plot."+ptype
+    canvas_kwargs = {
+        'saveas': sname,
+        'stype': ptype,
+        'width': 5,
+        'height': 4,
+    }
+
+    # panel kwargs
+    ftype = "csv"
+    fname = fname_split[0]+"_results."+ftype
+    panel_kwargs = {
+        'fname': fname,
+        'ftype': ftype,
+    }
+
+    # solver kwargs
+    # solver = SLPS(plasma, probe, data)
+    solver_kwargs = {
+    }
+
+
+    settings = {
+        'canvas_kwargs':canvas_kwargs,
+        'panel_kwargs': panel_kwargs,
+        'solver_kwargs': solver_kwargs,
+    }
+    return settings
 
 def main():
+    # initiate app
+    app = tk.Tk()
+    
+    # load settings
+    settings = get_settings()
+
+    # solver args
+    solver_args = {
+        'plasma': XenonPlasma(),
+        'probe': SSPL(0.010, 0.0079),
+        'data': get_lang_data(),
+        }
+
+    # create page
+    # create combined langmuir frame that sits on one page
+    page = LSSLCD(**solver_args,master=app,**settings)
+    # pack it on
+    page.pack()
+
+    # close button
+    btn = tk.Button(app,text="Close App",command=app.destroy)
+    btn.pack()
+
+    # run loop
+    app.mainloop()
+    
+
+
+
+
+def old_main_2():
     # initiate app
     app = tk.Tk()
 
@@ -74,7 +140,7 @@ def main():
 
     # create Canvas
     ptype = "png"
-    sname = fname_split[0]+"_plots."+ptype
+    sname = fname_split[0]+"_plot."+ptype
     #canvas = Canvas(page, saveas=args.sname, width=4, height=3)
     canvas = Canvas(page, saveas=sname, width=5, height=4)
     canvas.grid(row=0, column=1, sticky="NSWE", rowspan=2)
