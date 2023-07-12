@@ -56,8 +56,8 @@ def old_main():
 
 def get_lang_data():
     filename = args.fname
-    data = pd.read_csv(filename, names=["voltage", "current"])
-    data.iloc[:, 1] *= 1
+    data = pd.read_csv(filename, names=["voltage", "current"],header=1,delimiter="\t")
+    data.iloc[:, 1] *= -1
     return data
 
 
@@ -68,13 +68,21 @@ def main():
     # create page
     page = tk.Frame(app)
     page.pack()
+    
+    # filename (no extentsion) to open
+    fname_split = args.fname.split(".")
 
     # create Canvas
-    canvas = Canvas(page, saveas=args.sname, width=4, height=3)
+    ptype = "png"
+    sname = fname_split[0]+"_plots."+ptype
+    #canvas = Canvas(page, saveas=args.sname, width=4, height=3)
+    canvas = Canvas(page, saveas=sname, width=5, height=4)
     canvas.grid(row=0, column=1, sticky="NSWE", rowspan=2)
 
     # create Panel
-    panel = Panel(page)
+    ftype = "csv"
+    fname = fname_split[0]+"_results."+ftype
+    panel = Panel(page,fname=fname,ftype=ftype)
     panel.grid(row=0, column=0, sticky="N")
 
     data = get_lang_data()
@@ -87,7 +95,7 @@ def main():
     plasma = XenonPlasma()
     # plasma = ArgonPlasma()
 
-    solver = SLPS(plasma, rox_probe, data)
+    solver = SLPS(plasma, probe, data)
 
     # pre process data
     solver.preprocess()

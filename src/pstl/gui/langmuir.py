@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Any, Sequence
 import tkinter as tk
+import json
+import csv
 
 import numpy as np
 import pandas as pd
@@ -153,6 +155,7 @@ class MatplotlibCanvasWToolbarSave(MatplotlibCanvasWToolbar):
         if saveas is None:
             saveas = self.saveas
         self.fig.savefig(saveas, **kwargs)
+        print("save to '%s'"%(saveas))
 
 
 class LinearSemilogyCanvas(MatplotlibCanvasWToolbarSave):
@@ -220,8 +223,8 @@ class LinearSemilogyDoubleCanvas(tk.Frame):
             self, saveas=saveas[0], **figure_kw)
 
         self.widgets.frames['semilogy'] = MatplotlibCanvasWToolbarSave(
-
             self, saveas=saveas[1], **figure_kw)
+
         # remap ax for plotting
         self.frame1 = self.widgets.frames['linear']
         self.ax1 = self.frame1.ax
@@ -535,7 +538,7 @@ def other():
 
 
 class SingleProbeLangmuirResultsFrame(tk.Frame):
-    def __init__(self, master=None, cnf={}, *args, results=None, **kwargs):
+    def __init__(self, master=None, cnf={}, *args, results=None, fname=None, ftype=None,**kwargs):
         super().__init__(master, cnf, *args, **kwargs)
 
         # add widgets organizer
@@ -560,17 +563,27 @@ class SingleProbeLangmuirResultsFrame(tk.Frame):
 
         # loop and create labels to display
         labels = {}
+        row = 0 
         for k, key in enumerate(results.keys()):
             text = self.results[key]["value"]
             unit = self.results[key]["other"]
             unit = self.default_unit_format(key) if unit is None else unit
-            labels[key] = ResultOutput(key, text, unit, self, cnf)
+            labels[key] = ResultOutput(key, text, unit, self, cnf) # these are frames of btn and label
             row = grid_positions_list[k][0]
             col = grid_positions_list[k][1]
             labels[key].grid(row=row, column=col,
                              sticky="NWSE", padx=5, pady=5)
+            
+        # add export frame (button&entry) to save results
+        frame_save = SaveResults(self.export_results, 
+                                 fname=fname, ftype=ftype,
+                                 master=self, cnf=cnf,
+                                 *args,**kwargs)
+        frame_save.grid(row=row+1,column=0,columnspan=3,sticky="NSWE", padx=5,pady=5)
 
         self.widgets.frames.update(labels)
+
+        self.widgets.frames["save"] = frame_save
 
         self.update_texts(results=self.results)
 
@@ -607,6 +620,16 @@ class SingleProbeLangmuirResultsFrame(tk.Frame):
             text = text.format(val)
             self.update_label(key, text)
 
+    def export_results(self):
+        temp = self.results
+        results = {}
+
+        for key in temp.keys():
+            value = temp[key]["value"]
+            unit = temp[key].get("unit",self.default_unit_string(key))
+            results[key] = {"value":value,"unit":unit}
+        return results
+
     def default_text_format(self, key):
         if key == "V_f":
             text = "{0:.2f}"
@@ -630,6 +653,34 @@ class SingleProbeLangmuirResultsFrame(tk.Frame):
             text = "{0:.2e}"
         elif key == "sheath" or key == "r_p/lambda_De":
             text = "{0:.2e}"
+        else:
+            text = "{}"
+
+        return text
+    
+    def default_unit_string(self, key):
+        if key == "V_f":
+            text = "V"
+        elif key == "V_s":
+            text = "V"
+        elif key == "I_is":
+            text = "A"
+        elif key == "n_i":
+            text = "m^-3"
+        elif key == "I_es":
+            text = "A"
+        elif key == "KT_e":
+            text = "eV"
+        elif key == "n_e":
+            text = "m^-3"
+        elif key == "J_es":
+            text = "A/m^2"
+        elif key == "J_is":
+            text = "A/m^2"
+        elif key == "lambda_De":
+            text = "m"
+        elif key == "sheath" or key == "r_p/lambda_De":
+            text = "-"
         else:
             text = "{}"
 
@@ -700,6 +751,89 @@ class SingleProbeLangmuirResultsFrame(tk.Frame):
             num_cols = int(np.ceil(num_items/num_rows))
 
         return self._sort_positions(num_items, num_rows, num_cols)
+
+class SaveResults(tk.Frame):
+    def __init__(self, command, fname=None, ftype=None, master=None, cnf=None, *args,**kwargs):
+        super().__init__(master,cnf, *args, **kwargs)
+
+        # create widgets
+        self.widgets = Widgets()
+
+        # create save button
+        btn_kwargs = kwargs.get("btn_kwargs", {})
+        btn_kwargs.setdefault("text", "Save")
+        btn_kwargs.setdefault("command",self.export_results)
+        btn = tk.Button(self, cnf, **btn_kwargs)
+
+        # create entry for filename and populate with default
+        entry_kwargs = kwargs.get("entry_kwargs", {})
+        #entry_kwargs.setdefault()
+        entry = tk.Entry(self, cnf, *entry_kwargs)
+
+        # pack away!
+        btn.grid(row=0, column=0, sticky="NSWE")
+        entry.grid(row=0, column=1, sticky="NSWE")
+
+        # store
+        self.widgets.buttons["save"] = btn
+        self.widgets.entries["save"] = entry
+
+        # store command
+        self.command = command
+
+        # store file type to save to 
+        self.ftype = ftype
+
+        # store fname default
+        if fname is None:
+            fname = "output.txt"
+        entry.insert(0,fname)
+
+
+    def export_results(self):
+        command = self.command
+        if callable(command):
+            results = command()
+        else:
+            results = command
+        ftype = self.ftype
+
+
+        # get current entry filename
+        fname = self.widgets.entries["save"].get()
+
+        if ftype is None or ftype.upper() == "CSV":
+            if fname is None:
+                fname = "output.csv"
+
+            with open(fname, "w") as outfile:
+                header = []
+                values = []
+                for key in results.keys():
+                    unit = results[key]["unit"]
+                    string = key+" - ["+unit+"]"
+                    header.append(string)
+                for key in results.keys():
+                    value = str(results[key]["value"])
+                    values.append(value)
+
+                writer = csv.writer(outfile)
+
+                writer.writerow(header)
+                writer.writerow(values)
+
+        elif ftype.upper() == "JSON":
+            if fname is None:
+                fname = "output.json"
+
+            with open(fname, "w") as outfile:
+                json.dump(results, outfile) 
+        else:
+            raise ValueError("Not supported export type. Try:\n") # add list of types
+        
+        # print
+        print("saved to '%s'"%(fname))
+
 
 
 class ResultOutput(tk.Frame):
