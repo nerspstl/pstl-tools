@@ -32,3 +32,9 @@ class ArgonPlasma(Plasma):
         if m_i is None:
             m_i = 39.948*c.m_p  # amu*kg -> kg
         super().__init__(m_i, m_e, gas, *args, **kwargs)
+
+class NeonPlasma(Plasma):
+    def __init__(self, m_i=None, m_e=c.m_e, gas=None, *args, **kwargs) -> None:
+        if m_i is None:
+            m_i = 20.1797*c.m_p  # amu*kg -> kg
+        super().__init__(m_i, m_e, gas, *args, **kwargs)

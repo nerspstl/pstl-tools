@@ -15,6 +15,7 @@ available_plasma_properties = [
     "I_is",
     "J_es",
     "J_is",
+    "r_p/lambda_De",
     "sheath",
 ]
 

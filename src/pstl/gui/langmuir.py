@@ -158,8 +158,9 @@ class MatplotlibCanvasWToolbarSave(MatplotlibCanvasWToolbar):
     def save(self, **kwargs):#, saveas: str | None = None, **kwargs):
         #if saveas is None:
         #    saveas = self.widgets.frames['save'].get()
-        self.fig.savefig(self.saveas, **kwargs)
-        print("save to '%s'"%(self.saveas))
+        saveas = self.widgets.frames["save"].get()
+        self.fig.savefig(saveas, **kwargs)
+        print("save to '%s'"%(saveas))
 
 
 class LinearSemilogyCanvas(MatplotlibCanvasWToolbarSave):
@@ -662,8 +663,10 @@ class SingleProbeLangmuirResultsFrame(tk.Frame):
             text = "{0:.2e}"
         elif key == "lambda_De":
             text = "{0:.2e}"
-        elif key == "sheath" or key == "r_p/lambda_De":
+        elif key == "r_p/lambda_De":
             text = "{0:.2e}"
+        elif key == "sheath":
+            text = "{0}"
         else:
             text = "{}"
 
@@ -690,7 +693,9 @@ class SingleProbeLangmuirResultsFrame(tk.Frame):
             text = "A/m^2"
         elif key == "lambda_De":
             text = "m"
-        elif key == "sheath" or key == "r_p/lambda_De":
+        elif key == "r_p/lambda_De":
+            text = "-"
+        elif key == "sheath":
             text = "-"
         else:
             text = "{}"
@@ -718,7 +723,9 @@ class SingleProbeLangmuirResultsFrame(tk.Frame):
             text = "A/m\u00B2"
         elif key == "lambda_De":
             text = "m"
-        elif key == "sheath" or key == "r_p/lambda_De":
+        elif key == "r_p/lambda_De":
+            text = ""
+        elif key == "sheath":
             text = ""
         else:
             text = "N/A"
@@ -849,6 +856,9 @@ class SaveResults(tk.Frame):
         
         # print
         print("saved to '%s'"%(fname))
+    
+    def get(self):
+        return self.widgets.entries["save"].get()
 
 
 
@@ -904,7 +914,7 @@ class ResultOutput(tk.Frame):
     def convert_to_latex(self, input_string: str):
 
         input_string = input_string.replace("lambda", "\u03BB")
-        input_string = input_string.replace("sheath", "r_p/\u03BB_De")
+        #input_string = input_string.replace("sheath", "r_p/\u03BB_De")
 
         split_string = input_string.split("_")
         if len(split_string) > 1:
@@ -980,7 +990,7 @@ class LinearSemilogySingleLangmuirCombinedData(CombinedDataFrame):
         # make save and exit button
         btn_save_n_close = tk.Button(self,cnf=cnf,command=self.save_n_close,text="Save and Close")
         # make exit button
-        btn_close = tk.Button(self,cnf=cnf,command=self.close,text="close")
+        btn_close = tk.Button(self,cnf=cnf,command=self.close,text="Close")
 
         # pack away!
         btn_save_n_close.grid(row=2,column=0,columnspan=2,sticky="NSWE")

@@ -11,9 +11,10 @@ from pstl.gui.langmuir import SingleProbeLangmuirResultsFrame as Panel
 from pstl.gui.langmuir import SingleProbeLangmuirResultsFrame
 from pstl.gui.langmuir import LinearSemilogySingleLangmuirCombinedData as LSSLCD
 
-from pstl.utls.plasmas import XenonPlasma, ArgonPlasma
+from pstl.utls.plasmas import XenonPlasma, ArgonPlasma, NeonPlasma
 from pstl.diagnostics.probes.langmuir.single import SphericalSingleProbeLangmuir as SSPL
 from pstl.diagnostics.probes.langmuir.single import CylindericalSingleProbeLangmuir as CSPL
+from pstl.diagnostics.probes.langmuir.single import PlanarSingleProbeLangmuir as PSPL
 from pstl.diagnostics.probes.langmuir.single.analysis.solver import SingleLangmuirProbeSolver as SLPS
 
 style.use("bmh")
@@ -24,6 +25,8 @@ parser = argparse.ArgumentParser(
                     epilog='Text at the bottom of help')
 parser.add_argument('-s','--sname', help="save name for plots", default="outpng.png")
 parser.add_argument('-f','--fname', help="file name to read in", default="lang_data.txt")
+parser.add_argument('-c','--convergence', help="convergence rmse threshold for electron retarding fit", default=25,type=float)
+parser.add_argument('-n','--negative', help="if electron current is negative",action="store_true")
 args = parser.parse_args()
 
 def old_main():
@@ -57,11 +60,15 @@ def old_main():
 def get_lang_data():
     filename = args.fname
     data = pd.read_csv(filename, names=["voltage", "current"],header=1,delimiter="\t")
-    data.iloc[:, 1] *= -1
+    if args.negative:
+        data.iloc[:, 1] *= -1
+    else:
+        data.iloc[:, 1] *= 1
     return data
 
 def get_settings():
     filename = args.sname # Change this
+    thershold_rmse = args.convergence
     # filename (no extentsion) to open
     fname_split = args.fname.split(".")
 
@@ -96,6 +103,36 @@ def get_settings():
     }
     return settings
 
+"""
+WLP: Cylinderical Downstream
+Diameter: 0.1230 inches -> 0.31242 cm
+Length: 0.6105 inches -> 1.55067 cm
+
+PLP: Planer Down stream
+Diameter: 0.1570 inches -> 0.39878 cm
+
+NLP: Cylinderial @ Neutral
+Diameter: 0.0155 inches -> 0.03937 cm
+Lenth: 0.1170 inches -> 0.29718 cm
+
+Farday:
+Diameter inner: 0.6925 inches -> 1.175895 cm
+Diameter outer: 1.120 inches -> 2.8448 cm
+"""
+def wlp():
+    return CSPL(0.31242e-2,1.55067e-02)
+def plp():
+    return PSPL(0.39878e-02)
+def NLP():
+    return CSPL(0.03937e-02,0.29718e-02)
+def blp():
+    return SSPL(0.010, 0.0079)
+def blp_smaller():
+    return SSPL(0.010, 0.009) # BLP6
+def rox():
+    return CSPL(0.76e-3,2.54e-3)
+
+
 def main():
     # initiate app
     app = tk.Tk()
@@ -105,8 +142,10 @@ def main():
 
     # solver args
     solver_args = {
-        'plasma': XenonPlasma(),
-        'probe': SSPL(0.010, 0.0079),
+        #'plasma': XenonPlasma(),
+        'plasma': NeonPlasma(),
+        #'probe': SSPL(0.010, 0.0079),
+        'probe': blp(),
         'data': get_lang_data(),
         }
 
@@ -156,7 +195,7 @@ def old_main_2():
 
     # probe = CSPL(2.4e-3, 10e-3)
     probe = SSPL(0.010, 0.0079)
-    probe_smaller = SSPL(0.010, 0.009)
+    probe_smaller = SSPL(0.010, 0.009) # probe 5 (plasma screen)
     rox_probe = CSPL(0.76e-3,2.54e-3)
     plasma = XenonPlasma()
     # plasma = ArgonPlasma()

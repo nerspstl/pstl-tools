@@ -1,6 +1,18 @@
 from pstl.utls.plasmas.sheath import transitional
 from pstl.utls.plasmas.sheath import thick
 
+"""
+rp: Radius of Probe
+LDe: Electron Debye Length
+
+Let rp/LDe = ratio
+
+Then
+If ratio <= 3       ->  Thick Sheath
+If 3 < ratio < 50   ->  Transitional Sheath
+If ratio >= 50      ->  Thin Sheath
+"""
+
 __all__ = [
     'find_ab_coefs',
     transitional,

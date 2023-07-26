@@ -9,6 +9,7 @@ from typing import Optional, Union, Tuple, Dict, Any
 import numpy as np
 import numpy.typing as npt
 
+from pstl.utls import constants as c
 from pstl.utls.verify import verify_type, verify_pair_of_1D_arrays
 from pstl.utls.functionfit.helpers import find_fit, FunctionFit
 
@@ -62,6 +63,7 @@ def get_ion_saturation_current(
         0: 'plasma',
         1: 'floating',
         2: 'minimum',
+        3: 'combined',
     }
 
     # Converts method: str -> method: int if method is a str
@@ -79,6 +81,8 @@ def get_ion_saturation_current(
         func = floating_potential_method
     elif method == 2:
         func = minimum_ion_current_method
+    elif method == 3:
+        func = combined_plasma_and_floating_method
     else:  # makes a table of options if error occurs
         table = "\n".join([f"{k}\t{v}" for k, v in available_methods.items()])
         raise ValueError(
@@ -182,6 +186,16 @@ def floating_potential_method(
         other['V_f'] = V_f
     return ion_saturation_current, other
 
+def _get_ion_current_fit(voltage, current, *args, I_i_fit=None,I_i_method=None,**kwargs):
+
+    # check if fit needs to be found to evaluate at floating potential
+    shape = kwargs.get("shape", None)
+    fit_kwargs = kwargs.pop("fit_kwargs", {})
+    I_i_fit = check_for_ion_current_fit(
+        I_i_fit, voltage, current, shape, method=I_i_method, fit_kwargs=fit_kwargs)
+    
+    return I_i_fit
+
 
 def _floating_potential_method(
         voltage, current, *args,
@@ -240,9 +254,73 @@ def minimum_ion_current_method(
     # Following set format of (value, Dict)
     return np.min(current), {}
 
+def combined_plasma_and_floating_method(
+        voltage, current, *args,
+        V_s: float | None = None, return_V_s: bool = False, 
+        V_f: float | None = None, return_V_f: bool = False, 
+        T_e: float | None = None, return_T_e: bool = False, 
+        n_e: float | None = None, return_n_e: bool = False, 
+        area: float | None = None, return_area: bool = False, 
+        **kwargs) -> Tuple[float, Dict[str, Any]]:
+    # check if a plasma point is given, if non
+    verify_pair_of_1D_arrays(voltage, current)
+    if len(voltage) != len(current):
+        raise ValueError(
+            "Voltage and current arrays must have the same length.")
+
+    # number of data points
+    n = len(voltage)
+    
+    # determine starting point (all positive after vf) if not given
+    if V_f is None:
+        # determine starting point (all positive after V_f)
+        floating_kwargs = kwargs.pop('V_f_kwargs', {})
+        floating_kwargs.setdefault('method', "consecutive")
+        # get floating potential
+        V_f, _ = get_floating_potential(
+            voltage, current, **floating_kwargs)
+    # verify V_f
+    verify_type(V_f, (int, float, np.int64, np.float64, np.ndarray), 'V_f')
+
+    # solve for ion saturation current
+    if V_s is not None:  # vs is given and evaluated at this location
+        verify_type(V_s, (int, float, np.int64, np.float64, np.ndarray), 'V_s')
+    else:
+        # if vs is none get plasma potential via
+        # get_plasma_potential_consecutive of funcs_plasma_potential
+        plasma_kwargs = kwargs.get('plasma_kwargs', {})
+        V_s, _ = get_plasma_potential(
+            voltage, current, **plasma_kwargs)
+
+    # calculate ion_saturation_current
+    ion_saturation_current = _combined_get_ion_saturation_current(n_e,area,T_e,V_f,V_s)
+
+    I_i_fit= _get_ion_current_fit(voltage,current,*args,**kwargs)
+
+    # Returns in formate (value, Dict[str,Any])
+    other: dict[str, Any] = {"fit": I_i_fit}
+    if return_V_s is True:
+        other['V_s'] = V_s
+    if return_V_f is True:
+        other['V_f'] = V_f
+    if return_T_e is True:
+        other['T_e'] = T_e
+    if return_n_e is True:
+        other['n_e'] = n_e
+    if return_area is True:
+        other['area'] = area
+    return ion_saturation_current, other
+
 
 def calculate_ion_saturation_current_xenon(electron_sat) -> float:
     ion_sat = -np.divide(electron_sat, 323)
     if ion_sat is np.nan:
         raise ValueError
     return ion_sat
+
+def _combined_get_ion_saturation_current(n,area,T_e,V_f,V_s):
+    # T_e is eV
+    I_es = c.e*n*area*np.sqrt((c.e*T_e)/(2*np.pi*c.m_e))
+    I_e = I_es*np.exp(c.e*(V_f-V_s)/(T_e*c.e))
+    I_isat = I_e # @ floating potential
+    return I_isat

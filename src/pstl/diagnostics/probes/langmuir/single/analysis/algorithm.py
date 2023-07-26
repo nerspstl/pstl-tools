@@ -29,13 +29,13 @@ default_plasma_properties_to_get = [
     "I_is",
     "J_is",
     "lambda_De",
-    # "r_p/lambda_De",
+    "r_p/lambda_De",
     "sheath",
 ]
 default_methods = {
     "V_f": "consecutive",
     "V_s": "intersection",
-    "I_is": 0,
+    "I_is": 3,
     "n_i": 0,
     "I_es": 0,
     "KT_e": 0,
@@ -43,7 +43,7 @@ default_methods = {
     "J_es": 0,
     "J_is": 0,
     "lambda_De": 0,
-    # "r_p/lambda_De": 0,
+    "r_p/lambda_De": 0,
     "sheath": 0,
 }
 
@@ -391,8 +391,9 @@ def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
         )
         # get ionsaturation value at flaoting
         I_is, I_is_extras = get_ion_saturation_current(
-            voltage, current, V_f=V_f, method="floating",
+            voltage, current, V_f=V_f, method=3,
             I_i_fit=I_i_fit, I_i_method=sheath_method,
+            V_s=V_s, n_e=n_e,T_e=KT_e, area=area,
         )
         # temp ion density
         n_i, n_i_extras = get_ion_density(
@@ -467,18 +468,21 @@ def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
     results["n_i"]["other"] = n_i_extras
     results["I_es"]["value"] = I_es
     results["I_es"]["other"] = I_es_extras
+    print(area)
     results["J_es"]["value"], results["J_es"]["other"] = get_electron_saturation_current_density(
         area, I_es=I_es)
+    results["J_is"]["value"], results["J_is"]["other"] = get_ion_saturation_current_density(
+        area, I_is=I_is)
     results["KT_e"]["value"] = KT_e
     results["KT_e"]["other"] = KT_e_extras
     results["n_e"]["value"] = n_e
     results["n_e"]["other"] = n_e_extras
     results["lambda_De"]["value"] = lambda_De
     results["lambda_De"]["other"] = lambda_De_extras
-    # results["r_p/lambda_De"]["value"] = ratio
-    # results["r_p/lambda_De"]["other"] = ratio_extras
-    results["sheath"]["value"] = ratio
-    results["sheath"]["other"] = ratio_extras
+    results["r_p/lambda_De"]["value"] = ratio
+    results["r_p/lambda_De"]["other"] = ratio_extras
+    results["sheath"]["value"] = ratio_extras['sheath']
+    results["sheath"]["other"] = {}
     data = {'voltage': voltage, 'current': current,
             'current_e': I_e, 'current_i': I_i}
     data = pd.DataFrame(data)

@@ -11,6 +11,7 @@ import numpy.typing as npt
 from numpy.polynomial import Polynomial as P
 
 from pstl.utls.verify import verify_type, verify_array_polarity
+from pstl.utls.helpers import interpolate
 from pstl.utls.functionfit.helpers import find_fit
 from pstl.diagnostics.probes.langmuir.single.analysis.floating_potential import get_floating_potential
 from pstl.diagnostics.probes.langmuir.single.analysis.electron_temperaure import get_electron_temperature
@@ -187,8 +188,10 @@ def get_electron_saturation_current_fit(
     # checks that an elec_sat_fit was made
     if elec_sat_fit is None:
         raise ValueError("'elec_sat_fit' not found")
+
     # calculate electron saturation current
-    electron_saturation_current = elec_sat_fit(V_s)
+    #electron_saturation_current = elec_sat_fit(V_s)
+    electron_saturation_current = interpolate(V_s,voltage,current,method="linear")
 
     # determine returns based on input arguments
     others: dict[str, Any] = {"fit": elec_sat_fit}
