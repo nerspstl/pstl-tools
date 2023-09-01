@@ -200,3 +200,59 @@ class BOP_100_2D_802E(BOP_100_1M):
 
 
 
+
+class BOP_100_2D_802E(BOP_100_1M):
+    """
+    Builds off the BOP_100_1D class adds ieee=802E
+    """
+    def __init__(self,port=None,**kwargs):
+
+        kwargs['class_name']=kwargs.get('class_name','kepco_BOP_100_1D_802E')
+        kwargs['name']=kwargs.get('name',kwargs['class_name'])
+        kwargs['ieee']='802E'
+        BOP_100_1M.__init__(self,port,**kwargs)
+
+        # set end_termination for this device to '\r\n'
+        self.resource.read_termination='\r\n'
+
+        # set output status to off
+        output_status=self.query("OUTP?",delay=0.1)
+        if output_status=='0':
+            self._output_status='off'
+        elif output_status=='1':
+            self._output_status='on'
+        else:
+            self._output_status=None
+            self.output_status(False)
+            raise TypeError("Power supply Status Error '%s'"%(str(output_status)))
+
+    def close(self):
+        self.output_status(False)
+        self.resource.close()
+ 
+
+    def output_status(self,ON=None):
+
+        if ON==True:
+            if self._output_status != 'on':
+                self.write("OUTP ON")
+                self._output_status='on'
+        elif ON==False:
+            if self._output_status != 'off':
+                self.write("OUTP OFF")
+                self._output_status='off'
+        elif ON is None:
+            return self._output_status
+        else:
+            raise TypeError("Not bool or NoneType")
+
+    def setVoltage(self,voltage,**kwargs):
+        self.output_status(ON=True)
+        self.write("VOLT %f"%(float(voltage)))
+
+    def setCurrent(self,current,**kwargs):
+        self.output_status(ON=True)
+        self.write("CURR %f"%(float(current)))
+
+
+
