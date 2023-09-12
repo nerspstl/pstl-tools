@@ -11,7 +11,9 @@ from pstl.gui.langmuir import SingleProbeLangmuirResultsFrame as Panel
 from pstl.gui.langmuir import SingleProbeLangmuirResultsFrame
 from pstl.gui.langmuir import LinearSemilogySingleLangmuirCombinedData as LSSLCD
 
-from pstl.utls.plasmas import XenonPlasma, ArgonPlasma, NeonPlasma
+from pstl.utls.plasmas import XenonPlasma, ArgonPlasma, NeonPlasma, Plasma
+from pstl.utls.errors.plasmas import FailedPlasmaClassBuild
+
 from pstl.diagnostics.probes.langmuir.single import SphericalSingleProbeLangmuir as SSPL
 from pstl.diagnostics.probes.langmuir.single import CylindericalSingleProbeLangmuir as CSPL
 from pstl.diagnostics.probes.langmuir.single import PlanarSingleProbeLangmuir as PSPL
@@ -27,6 +29,8 @@ parser.add_argument('-s','--sname', help="save name for plots", default="outpng.
 parser.add_argument('-f','--fname', help="file name to read in", default="lang_data.txt")
 parser.add_argument('-c','--convergence', help="convergence rmse threshold for electron retarding fit", default=25,type=float)
 parser.add_argument('-n','--negative', help="if electron current is negative",action="store_true")
+parser.add_argument('-p','--plasma', help="define plasma composition i.e. Xenon, Argon, Neon",default="",type=str)
+parser.add_argument('-d','--delimiter', help="sets delimiter of csv file, default is ',' use '\t' for tab",default=",",type=str)
 args = parser.parse_args()
 
 def old_main():
@@ -59,7 +63,7 @@ def old_main():
 
 def get_lang_data():
     filename = args.fname
-    data = pd.read_csv(filename, names=["voltage", "current"],header=1,delimiter="\t")
+    data = pd.read_csv(filename, names=["voltage", "current"],header=1,delimiter=args.delimiter)
     if args.negative:
         data.iloc[:, 1] *= -1
     else:
@@ -132,6 +136,46 @@ def blp_smaller():
 def rox():
     return CSPL(0.76e-3,2.54e-3)
 
+def set_plasma_type(string,*args, **kwargs):
+    plasma = None
+    while plasma is None:
+        plasma = logic_plasma_type(string, *args, **kwargs)
+        if plasma is not None:
+            break
+        else:
+            plasma = choose_plasma_type()
+            
+    return plasma
+
+    
+        
+
+def choose_plasma_type():
+    string = input("Please enter Xenon, Argon, Neon\nor define using '-p' flag when initializing>>")
+    plasma = logic_plasma_type(string)
+    return plasma
+
+def logic_plasma_type(string, *args, **kwargs):
+    string = string.upper()
+    if string == "":
+        plasma = choose_plasma_type()
+    elif string == "XENON":
+        plasma = XenonPlasma(*args, **kwargs)
+    elif string == "ARGON":
+        plasma = ArgonPlasma(*args, **kwargs)
+    elif string == "NEON":
+        plasma = NeonPlasma(*args, **kwargs)
+    else:
+        try:
+            plasma = Plasma(*args,**kwargs)
+        except:
+            print("'%s' does not match known options.")
+            raise FailedPlasmaClassBuild()
+
+    return plasma
+
+
+
 
 def main():
     # initiate app
@@ -143,10 +187,10 @@ def main():
     # solver args
     solver_args = {
         #'plasma': XenonPlasma(),
-        'plasma': NeonPlasma(),
+        'plasma': set_plasma_type(args.plasma), # use -p <plasma-string-name>
         #'probe': SSPL(0.010, 0.0079),
         'probe': blp(),
-        'data': get_lang_data(),
+        'data': get_lang_data(),                # use -f <file-path\file-name.csv>
         }
 
     # create page
