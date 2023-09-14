@@ -19,12 +19,19 @@ default_fit_thin_kwargs = {
 
 
 def find_ion_current(shape, *args, method=None, **kwargs):
+    """
+    Determines and returns only a 1D array of ion current contribution for each point of an IV trace. 
+    Similar to get_ion_current, but no extras: dictionary is returned, just the 1D array of ion currents."""
     value, _ = get_ion_current(shape, method=method, *args, **kwargs)
     return value
 
 
 def get_ion_current(shape, *args, method=None, ** kwargs):
-
+    """
+    Determines and returns a 1D array of ion current contribution for each point of an IV trace along with a dictionary with extras information.
+    A default method is assumed unless specified via keyword argument 'method' to be 'thin_method'. The method's function is then called with
+    argument 'shape', *args, **kwargs passed to the function. All called functions are templated to return ion_current: 1D array, extras: dictionary.
+    """
     # set default -> (thin)
     method = 0 if method is None else method
 
@@ -35,6 +42,10 @@ def get_ion_current(shape, *args, method=None, ** kwargs):
 
 
 def check_for_ion_current_fit(I_i_fit, voltage, current, shape=None, method=None, **kwargs):
+    """
+    Determines if there is function fit for ion current (I_i_fit). If it does not exist (i.e. I_i_fit is None),
+    then a fit is made using suppied voltage, current, shape=None, method=None, kwargs['fit_kwargs'] to get_ion_current function.
+    Returns a function fit class."""
     # determine starting point (all positive after vf) if not given
     if I_i_fit is None:
         # determine starting point (all positive after V_f)
@@ -50,22 +61,25 @@ def check_for_ion_current_fit(I_i_fit, voltage, current, shape=None, method=None
 
 def thin_method(shape, *args, **kwargs):
     func = thin.shape_fit_selector(shape)
-    return func(*args, **kwargs)
+    return func(*args, shape=shape,**kwargs)
 
 
 def thin_func_method(shape, *args, **kwargs):
     func = thin.shape_func_selector(shape)
-    return func(*args, **kwargs)
+    return func(*args, shape=shape,**kwargs)
 
 
 def transitional_method(shape, *args, **kwargs):
     func = transitional.shape_selector(shape)
-    return func(*args, **kwargs)
+    return func(*args, shape=shape,**kwargs)
 
 
 def thick_method(shape, *args, **kwargs):
     func = thick.shape_selector(shape)
-    return func(*args, **kwargs)
+    print("kwargs")
+    print(kwargs)
+    print(kwargs)
+    return func(*args, shape=shape,**kwargs)
 
 
 # Declare available methods

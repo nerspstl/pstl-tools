@@ -47,7 +47,7 @@ default_fit_thick_kwargs = {
 
 def get_ion_saturation_current(
         *args,
-        method: int | str = 0,
+        method: int | str | None = 0,
         **kwargs) -> Tuple[float, Dict[str, Any]]:
     """
     Parameters

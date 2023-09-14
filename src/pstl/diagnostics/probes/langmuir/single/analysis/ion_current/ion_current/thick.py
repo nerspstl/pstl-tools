@@ -3,7 +3,7 @@ import numpy as np
 from pstl.utls import constants as c
 from pstl.utls.helpers import method_function_combiner
 from pstl.utls.helpers import method_selector as method_selector
-from pstl.utls.helpers import FunctionFit, CustomFit, make_CustomFit
+from pstl.utls.functionfit import FunctionFit, CustomFit, make_CustomFit
 from pstl.utls.decorators import where_function_else_zero
 
 
@@ -33,6 +33,7 @@ def spherical_method(voltage, area, n0, V_s, m_i, KT_e, *args, **kwargs):
         _spherical_function, spherical_domain_condition)
 
     coefs = (V_s, KT_e, area, n0, m_i)
+    print("coefs",coefs)
     I_i = func(voltage, *coefs)
 
     fit = make_CustomFit(func, voltage, I_i, coefs)
@@ -58,21 +59,21 @@ def planar_method(voltage, area, n0, V_s, m_i, KT_e, *args, **kwargs):
 
 
 # domain conditions
-def cylinderical_domain_condition(voltage, V_s, KT_e):
-    return _domain_condition(voltage, V_s, KT_e)
+def cylinderical_domain_condition(voltage, V_s, KT_e, *args, **kwargs):
+    return _domain_condition(voltage, V_s, KT_e, *args, **kwargs)
 
 
-def spherical_domain_condition(voltage, V_s, KT_e):
-    return _domain_condition(voltage, V_s, KT_e)
+def spherical_domain_condition(voltage, V_s, KT_e, *args, **kwargs):
+    return _domain_condition(voltage, V_s, KT_e, *args, **kwargs)
 
 
-def planar_domain_condition(voltage, V_s, KT_e):
-    return _domain_condition(voltage, V_s, KT_e)
+def planar_domain_condition(voltage, V_s, KT_e, *args, **kwargs):
+    return _domain_condition(voltage, V_s, KT_e, *args, **kwargs)
 
 # generalized domain
 
 
-def _domain_condition(voltage, V_s, KT_e):
+def _domain_condition(voltage, V_s, KT_e, *args, **kwargs):
     condition = np.divide(
         np.subtract(V_s, voltage),  # [V]
         KT_e                         # [eV]
@@ -121,6 +122,10 @@ def planar_function(voltage, area, n0, V_s, m_i, KT_e):
 
 def _spherical_and_planar_function(voltage, area, n0, V_s, m_i, KT_e):
     A = (c.e*n0*area)*np.sqrt(c.e*KT_e/(2*np.pi*m_i))
+    print(c.e,n0,area,KT_e,m_i)
+    print()
+    print("n0",n0)
+    print("area",area)
 
     current = np.multiply(A, np.divide(V_s-voltage, KT_e))
 

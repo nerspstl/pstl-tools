@@ -31,7 +31,7 @@ default_fit_kwargs = {
 }
 
 
-def get_electron_saturation_current(*args, method=0, **kwargs) -> Tuple[float, Dict[str, Any]]:
+def get_electron_saturation_current(*args, method: int | str | None = 0, **kwargs) -> Tuple[float, Dict[str, Any]]:
     # Declare available methods
     available_methods = {
         0: 'fit',

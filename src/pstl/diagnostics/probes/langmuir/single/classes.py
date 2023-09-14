@@ -4,21 +4,11 @@ import numpy as np
 
 from pstl.diagnostics.probes.classes import Probe
 
-available_plasma_properties = [
-    "V_f",
-    "V_s",
-    "KT_e",
-    "lambda_De",
-    "n_e",
-    "n_i",
-    "I_es",
-    "I_is",
-    "J_es",
-    "J_is",
-    "r_p/lambda_De",
-    "sheath",
+available_probe_classes = [
+    ["cylinderical"],
+    ["spherical"],
+    ["planer", "planar"],
 ]
-
 
 class SingleProbeLangmuir(Probe, ABC):
     def __init__(self, diameter, *args, shape="Unknown", **kwargs) -> None:

@@ -50,7 +50,11 @@ class FloatingData:
         self._label_format = label_format
 
 
-def get_floating_potential(*args, method=0, **kwargs) -> Tuple[float, Dict[str, Any]]:
+def get_floating_potential(*args, method: int | str | None = 0, **kwargs) -> Tuple[float, Dict[str, Any]]:
+    """
+    Uses the specified keyword argument 'method' to determine the function to use to solve for floating potential (V_f).
+    By default, the 'consecutive' method is used. *args and **kwargs argmuments are then passed to the selected methods function.
+    By template design, the returns are V_f: float, extras: dict (other information)"""
     # Declare available methods
     available_methods = {
         0: 'consecutive',
@@ -65,7 +69,7 @@ def get_floating_potential(*args, method=0, **kwargs) -> Tuple[float, Dict[str, 
     # raises value error with options if failed to match
     if method == 0:  # default
         func = consecutive_method
-    else:  # makes a table of options if error occurs
+    else:  # makes a table of options if error occurs (if None Type)
         table = "\n".join([f"{k}\t{v}" for k, v in available_methods.items()])
         raise ValueError(
             f"Matching method not found: {method}\nChoose from one of the available options:\n{table}")
@@ -74,7 +78,14 @@ def get_floating_potential(*args, method=0, **kwargs) -> Tuple[float, Dict[str, 
     return func(*args, **kwargs)
 
 
-def check_for_floating_potential(V_f, voltage, current, **kwargs):
+# should have arguments as (voltage, current, V_f=None, *args, **kwargs)
+def check_for_floating_potential(V_f, voltage, current, *args, **kwargs): 
+    """
+    Checks if the floating potential given is an appropriate value.
+    If not, it solves for it using the kwarg 'method' (default is 'consecultive'),
+    the provided voltage and current, and any other kwargs using 'method'. These
+    values are passed as dictionary to kwargs under 'V_f_kwargs'.
+    """
     # determine starting point (all positive after vf) if not given
     if V_f is None:
         # determine starting point (all positive after V_f)
@@ -89,7 +100,7 @@ def check_for_floating_potential(V_f, voltage, current, **kwargs):
     return V_f
 
 
-def get_above_floating_potential(V_f, voltage, current, **kwargs):
+def get_above_floating_potential(V_f, voltage, current, *args, **kwargs):
     # Once floating Potential is found, find its index w.r.t. data
     istart = np.where(voltage < V_f)[0][-1]+1
     # Get data from positive current values (above floating)
@@ -99,7 +110,7 @@ def get_above_floating_potential(V_f, voltage, current, **kwargs):
     return istart, xdata, ydata
 
 
-def get_below_floating_potential(V_f, voltage, current, **kwargs):
+def get_below_floating_potential(V_f, voltage, current, *args, **kwargs):
     # Once floating Potential is found, find its index w.r.t. data
     iend = np.where(voltage < V_f)[0][-1]+1
     # Get data from positive current values (above floating)

@@ -1,0 +1,5 @@
+{
+    "canvas"    :   {"filename":"canvas_json_path/filename.json"},
+    "panal"     :   {"filename":"panel_json_path/filename.json"},
+    "solver"    :   {"filename":"solver_json_path/filename.json"}
+}

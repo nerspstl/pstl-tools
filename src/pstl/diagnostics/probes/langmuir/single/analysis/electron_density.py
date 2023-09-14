@@ -3,7 +3,7 @@ import numpy as np
 import pstl.utls.constants as c
 
 
-def get_electron_density(*args, method=0, **kwargs):
+def get_electron_density(*args, method: int | str | None = 0, **kwargs):
     # Declare available methods
     available_methods = {
         0: 'I_es',

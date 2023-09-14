@@ -7,7 +7,7 @@ from pstl.utls.plasmas.sheath import thick, transitional
 from pstl.utls.helpers import method_selector, method_function_combiner
 
 
-def get_ion_density(*args, method=0, **kwargs):
+def get_ion_density(*args, method: int | str | None = 0, **kwargs):
     # set default -> (thin)
     method = 0 if method is None else method
 

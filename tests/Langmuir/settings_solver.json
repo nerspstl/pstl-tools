@@ -1,0 +1,5 @@
+{
+    "plasma"    :   "xenon",
+    "probe"     :   "settings_probe_path/filename.json",
+    "data"      :   "settings_data_path/filename.json"
+}

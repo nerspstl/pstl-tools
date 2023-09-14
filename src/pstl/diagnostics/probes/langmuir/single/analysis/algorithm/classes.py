@@ -1,12 +1,12 @@
 
-from .ion_density import get_ion_density
-from .electron_density import get_electron_density
-from .plasma_potential import get_plasma_potential
-from .electron_saturation_current import get_electron_saturation_current, get_electron_saturation_current_density
-from .electron_temperaure import get_electron_temperature
-from .ion_saturation_current import get_ion_saturation_current, get_ion_saturation_current_density
-from .floating_potential import get_floating_potential
-from .ion_current import get_ion_current
+from ..ion_density import get_ion_density
+from ..electron_density import get_electron_density
+from ..plasma_potential import get_plasma_potential
+from ..electron_saturation_current import get_electron_saturation_current, get_electron_saturation_current_density
+from ..electron_temperaure import get_electron_temperature
+from ..ion_saturation_current import get_ion_saturation_current, get_ion_saturation_current_density
+from ..floating_potential import get_floating_potential
+from ..ion_current import get_ion_current
 from pstl.utls.plasmas.sheath import get_probe_to_sheath_ratio
 from typing import Dict, Any
 
@@ -171,7 +171,7 @@ def _topham(voltage, current, area, m_i, m_e=c.m_e,
     # Ie = Iprobe - Ii  --or-- Iprobe = Ie+Ii (note: Ii convention is negative)
     # -> temp I_i
     I_i, I_i_extras = get_ion_current(
-        shape,
+        "spherical",
     )
 
     convergence = False
@@ -253,20 +253,42 @@ def _topham(voltage, current, area, m_i, m_e=c.m_e,
     return results
 
 ######################################################################
+######################################################################
+######################################################################
 
+def topham_configure(convergence_percent, methods,*args, **kwargs):
+    """
+    This function calls other functions and then returns all of the 
+    the initial configurations for the topham algorithm for solving a
+    Langmuir probe.
 
-def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
-           methods={},
-           smooth=False, itmax=1, convergence_percent=1,
-           *args, **kwargs) -> Dict:
+    Parameters:
+    convergence_percent     "The convergence criteria in percent of the
+                            Langmuir algorithm for changes in sheath"
+    methods                 "Dictionary of methods for solving for 
+                            plasma properties"
+    *args
+    **kwargs                "Function args/kwargs for methods"
+
+    Returns:
+    convergence_decimal
+    methods_to_use
+    properties_to_get
+    results
+    func_kwargs
+    """
+    # Initialized plasma properties to return (not yet implemented)
     properties = None
+
+    # Checks defined methods are in a dictionary
     if not isinstance(methods, dict):
         raise ValueError(
             "'methods' must be a dictionary not: ", type(methods))
+    
     # convert convergence percent to a decimal
     convergence_decimal = convergence_percent/100
 
-    # overwrite methods if passed in
+    # overwrite default methods to be used if methods is partially/fully defined
     methods_to_use = dict(default_methods)
     methods_to_use.update(methods)
 
@@ -288,6 +310,31 @@ def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
     func_kwargs = {}
     for key in methods_to_use.keys():
         func_kwargs[key] = kwargs.get(key+"_kwargs", {})
+
+    # tuple of returns
+    returns = (
+        convergence_decimal,
+        methods_to_use,
+        properties_to_get,
+        results,
+        func_kwargs,
+    )
+
+    return returns
+
+def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
+           methods={},
+           smooth=False, itmax=9, convergence_percent=1,
+           *args, **kwargs) -> tuple[pd.DataFrame,Dict]:
+
+    # initialize configuration
+    (   convergence_decimal,
+        methods_to_use,
+        properties_to_get,
+        results,
+        func_kwargs,
+    ) = topham_configure(convergence_percent,methods,*args, **kwargs)
+
 
     # inialize sheath method
     sheath_method = "thin"
@@ -320,11 +367,20 @@ def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
     )
     I_i_fit = I_i_extras["fit"]
 
+    # Calculate electron current (I_e) from probe current (current) using determined ion current (I_i)
     I_e = np.subtract(current, I_i)
 
+    # Initialize convergence and loop counters/exit-criteria
     convergence = False
     it = 0
     old = float("inf")
+
+    # Start Convergence loop 
+    # First step is thin sheath assumption, 
+    # then continues with new sheath type (either transitional or thick (OML)) 
+    # till within convergence percent using this iteration compared to last iteration
+    # the last iteration values are sourced as the results, not the new as new is just used to show convergence
+    # Thus if not thin sheath, the loop will run at for the new sheath type at least twice
     while not convergence and it < itmax:
         # number of iterations
         it += 1
@@ -372,22 +428,22 @@ def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
         #   Note: in theory I_es = -I_is*exp(0.5)*sqrt(m_i/(2*pi*m_e))
         # questionable below:
         #   -> I_is = -I_es*exp(-0.5)*sqrt(2*pi*m_e/m_i) --or-- I_is = -exp(-0.5)*area*q_e*n_i*sqrt(KT_e/m_i)
-    # Last Step:
-    # Once convergence is made, get n_i and n_e (ion and electron densities) and J_es and J_is (electorn and ion saturation current densities)
-    # Electrons:
-    # -> n_e = I_es/(area*q_e)*sqrt(2*pi*m_e/KT_e)
-    # -> J_es = I_es/area
-    # Ions:
-    # if thin sheath:
-    # n_i = I_is/(area*q_e)*sqrt(m_i/KT_e)
-    # if thick sheath:
-    # n_i = ((alpha*pi^2*m_i)/(2*q_e^3*area^2))^(0.5)
+        # Last Step:
+        # Once convergence is made, get n_i and n_e (ion and electron densities) and J_es and J_is (electorn and ion saturation current densities)
+        # Electrons:
+        # -> n_e = I_es/(area*q_e)*sqrt(2*pi*m_e/KT_e)
+        # -> J_es = I_es/area
+        # Ions:
+        # if thin sheath:
+        # n_i = I_is/(area*q_e)*sqrt(m_i/KT_e)
+        # if thick sheath:
+        # n_i = ((alpha*pi^2*m_i)/(2*q_e^3*area^2))^(0.5)
 
-    # Debye Length
-    # -> lambda_De = sqrt(KT_e*epsilon_0/(n_e*q_e^2))
+        # Debye Length
+        # -> lambda_De = sqrt(KT_e*epsilon_0/(n_e*q_e^2))
 
         n_e, n_e_extras = get_electron_density(
-            I_es, area, KT_e, m_e=c.m_e, method="I_es",
+            I_es, area=area, KT_e=KT_e, m_e=c.m_e, method="I_es",
         )
         # get ionsaturation value at flaoting
         I_is, I_is_extras = get_ion_saturation_current(
@@ -397,7 +453,7 @@ def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
         )
         # temp ion density
         n_i, n_i_extras = get_ion_density(
-            I_is, area, KT_e, m_i, method=sheath_method,
+            I_is=I_is, voltage=voltage, current=current, area=area, KT_e=KT_e, m_i=m_i, method=sheath_method, shape=shape,
         )
         # lambda_D
         lambda_De, lambda_De_extras = get_lambda_D(n_e, KT_e)
@@ -413,7 +469,6 @@ def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
             sheath_method = "thick"
         elif ratio > 3 and ratio < 50:
             sheath_method = "transitional"
-            # get
         elif ratio >= 50 and it == 1:
             sheath_method = "thin"
             break
@@ -431,7 +486,7 @@ def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
         # <<enter here>>
         print(f"n_i before: {n_i:.2e}")
         n_i, n_i_extras = get_ion_density(
-            voltage, current, area, m_i, KT_e, shape, r_p, lambda_De, shape, method=sheath_method)
+            voltage, current, area=area, m_i=m_i, KT_e=KT_e, shape=shape, r_p=r_p, lambda_De=lambda_De, method=sheath_method)
         print(f"n_i after: {n_i:.2e}")
 
         # get new ion current with transitional or thick sheath
@@ -458,6 +513,12 @@ def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
 
         convergence = True if RMSE <= convergence_decimal else False
 
+    ##### REMOVE AFTER DEBUG ######
+
+    print("Number of iterations: %i"%(it))
+    print("Convergence %f"%(RMSE))
+    ###############################
+
     results["V_f"]["value"] = V_f
     results["V_f"]["other"] = V_f_extras
     results["V_s"]["value"] = V_s
@@ -468,11 +529,10 @@ def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
     results["n_i"]["other"] = n_i_extras
     results["I_es"]["value"] = I_es
     results["I_es"]["other"] = I_es_extras
-    print(area)
-    results["J_es"]["value"], results["J_es"]["other"] = get_electron_saturation_current_density(
-        area, I_es=I_es)
-    results["J_is"]["value"], results["J_is"]["other"] = get_ion_saturation_current_density(
-        area, I_is=I_is)
+    (results["J_es"]["value"], 
+    results["J_es"]["other"]) = get_electron_saturation_current_density(area, I_es=I_es)
+    (results["J_is"]["value"], 
+     results["J_is"]["other"]) = get_ion_saturation_current_density(area, I_is=I_is)
     results["KT_e"]["value"] = KT_e
     results["KT_e"]["other"] = KT_e_extras
     results["n_e"]["value"] = n_e
@@ -486,4 +546,6 @@ def topham(voltage, current, shape, r_p, area, m_i, m_e=c.m_e,
     data = {'voltage': voltage, 'current': current,
             'current_e': I_e, 'current_i': I_i}
     data = pd.DataFrame(data)
+    print(data)
+    print_results(results)
     return data, results

@@ -17,12 +17,12 @@ from pstl.diagnostics.probes.langmuir.single.analysis.electron_temperaure import
 from pstl.diagnostics.probes.langmuir.single.analysis.electron_saturation_current import get_electron_saturation_current
 
 
-def find_plasma_potential(*args, method=0, **kwargs) -> float:
+def find_plasma_potential(*args, method: int | str | None = 0, **kwargs) -> float:
     value, _ = get_floating_potential(*args, method=method, **kwargs)
     return value
 
 
-def get_plasma_potential(*args, method=0, **kwargs) -> Tuple[float, Dict[str, Any]]:
+def get_plasma_potential(*args, method: int | str | None = 0, **kwargs) -> Tuple[float, Dict[str, Any]]:
     # Declare available method
     available_methods = {
         0: 'intersection',

@@ -169,7 +169,7 @@ def logic_plasma_type(string, *args, **kwargs):
         try:
             plasma = Plasma(*args,**kwargs)
         except:
-            print("'%s' does not match known options.")
+            print("'%s' does not match known options."%(string))
             raise FailedPlasmaClassBuild()
 
     return plasma
