@@ -1,5 +1,6 @@
 import tkinter as tk
 import argparse
+import json
 
 import numpy as np
 import pandas as pd
@@ -7,17 +8,23 @@ from matplotlib import style
 
 from pstl.gui.langmuir import LinearSemilogyCanvas, LinearSemilogyDoubleCanvas, LinearSemilogyDoubleCanvasSingleProbeLangmuir
 from pstl.gui.langmuir import LinearSemilogyDoubleCanvasSingleProbeLangmuir as Canvas
-from pstl.gui.langmuir import SingleProbeLangmuirResultsFrame as Panel
-from pstl.gui.langmuir import SingleProbeLangmuirResultsFrame
 from pstl.gui.langmuir import LinearSemilogySingleLangmuirCombinedData as LSSLCD
 
-from pstl.utls.plasmas import XenonPlasma, ArgonPlasma, NeonPlasma, Plasma
+from pstl.gui.langmuir import SingleProbeLangmuirResultsFrame as Panel
+from pstl.gui.langmuir import SingleProbeLangmuirResultsFrame
+
+from pstl.utls.plasmas import XenonPlasma, ArgonPlasma, NeonPlasma, KryptonPlasma, Plasma
+from pstl.utls.plasmas import setup as plasma_setup
 from pstl.utls.errors.plasmas import FailedPlasmaClassBuild
+
+from pstl.utls.data import setup as data_setup
 
 from pstl.diagnostics.probes.langmuir.single import SphericalSingleProbeLangmuir as SSPL
 from pstl.diagnostics.probes.langmuir.single import CylindericalSingleProbeLangmuir as CSPL
 from pstl.diagnostics.probes.langmuir.single import PlanarSingleProbeLangmuir as PSPL
-from pstl.diagnostics.probes.langmuir.single.analysis.solver import SingleLangmuirProbeSolver as SLPS
+from pstl.diagnostics.probes.langmuir.single import setup as probe_setup
+
+from pstl.diagnostics.probes.langmuir.single.analysis.solvers.solvers import SingleLangmuirProbeSolver as SLPS
 
 style.use("bmh")
 
@@ -25,13 +32,28 @@ parser = argparse.ArgumentParser(
                     prog='GUI Langmuir',
                     description='Anaylsis on IV-trace',
                     epilog='Text at the bottom of help')
-parser.add_argument('-s','--sname', help="save name for plots", default="outpng.png")
+parser.add_argument('-o','--sname', help="save name for plots", default="outpng.png")
 parser.add_argument('-f','--fname', help="file name to read in", default="lang_data.txt")
 parser.add_argument('-c','--convergence', help="convergence rmse threshold for electron retarding fit", default=25,type=float)
 parser.add_argument('-n','--negative', help="if electron current is negative",action="store_true")
-parser.add_argument('-p','--plasma', help="define plasma composition i.e. Xenon, Argon, Neon",default="",type=str)
-parser.add_argument('-d','--delimiter', help="sets delimiter of csv file, default is ',' use '\t' for tab",default=",",type=str)
+parser.add_argument('-s','--delimiter', help="sets sep or delimiter of tabular data file, default is ',' use '\t' for tab",default=",",type=str)
+parser.add_argument('-g','--neutral_gas', help="define gas composition i.e. Xenon, Argon, Neon",default="",type=str)
+parser.add_argument('-p','--probe', help="define probe shape diameter length* where *only for spherical",nargs="*")
+
+parser.add_argument('-O','--output_settings_file', help="location of output results defining json file",type=str)
+parser.add_argument('-G','--neutral_gas_settings_file', help="location of neutral gas (and plasma) defining json file",type=str)
+parser.add_argument('-P','--probe_settings_file', help="location of probe defining json file",type=str)
+parser.add_argument('-D','--data_settings_file', help="location of data defining json file",type=str)
+parser.add_argument('-S', '--solver_settings_file', help="location of solver settings json file",type=str)
 args = parser.parse_args()
+
+
+
+available_shapes = {
+    0: ['cylinderical'],
+    1: ['spherical'],
+    2: ['planar', 'planer'],
+}
 
 def old_main():
     x = np.linspace(-.2, .2, 9)
@@ -148,7 +170,30 @@ def set_plasma_type(string,*args, **kwargs):
     return plasma
 
     
-        
+def choose_probe_type():
+    shape = args.probe[0]
+    shape = shape.lower()
+    if shape in available_shapes[0]: #"cylinderical"
+        Probe = CSPL
+    elif shape in available_shapes[1]:  #"spherical":
+        Probe = SSPL
+    elif shape in available_shapes[2]:  #"planer"
+        Probe = PSPL
+    else:
+        raise ValueError("First argument of probe does not match available shapes '%s'"%(shape))
+    other_args = args.probe[1:]
+    new_args:list[None|int|float] = [None]*len(other_args)
+    for k, value in enumerate(other_args):
+        try:
+            new_args[k] = float(value)  
+        except:
+            raise ValueError("Argument %i of Probe is not a float %s"%(k+1,other_args[k]))
+    tuple_args: tuple[float] = tuple(new_args)  # type: ignore
+
+    probe = Probe(*tuple_args) # type: ignore
+    return probe
+
+    
 
 def choose_plasma_type():
     string = input("Please enter Xenon, Argon, Neon\nor define using '-p' flag when initializing>>")
@@ -178,19 +223,61 @@ def logic_plasma_type(string, *args, **kwargs):
 
 
 def main():
+    if args.probe_settings_file is None and args.probe is None:
+        raise ValueError("either probe_settings_file or probe must be defined")
+
+    if args.neutral_gas_settings_file is None and args.plasma is None:
+        raise ValueError("either neutral_gas_settings_file or plasma must be defined")
+    
+    if args.data_settings_file is None and args.fname is None:
+        raise ValueError("either data_settings_file or fname must be defined")
+
     # initiate app
     app = tk.Tk()
     
     # load settings
     settings = get_settings()
 
+    # probe settings
+    if args.probe_settings_file is None: 
+        probe = choose_probe_type() if args.gas is None else set_plasma_type(args.gas)
+    else:
+        with open(args.probe_settings_file) as f: 
+            probe_settings = json.load(f)
+        probe = probe_setup(probe_settings)
+
+    # plasma settings
+    if args.neutral_gas_settings_file is None: 
+        plasma = choose_plasma_type() 
+    else:
+        with open(args.neutral_gas_settings_file) as f: 
+            plasma_settings = json.load(f)
+        plasma = plasma_setup(plasma_settings)
+    
+    # data settings
+    if args.data_settings_file is None: 
+        try:
+            data = pd.read_csv(args.fname)
+        except:
+            raise ValueError("fname unable to load, must specify data_file or fix fname")
+    else:
+        with open(args.data_settings_file) as f:
+            data_settings = json.load(f)
+        data = data_setup(data_settings)
+    
+    # if negative
+    if args.negative:
+        data.iloc[:, 1] *= -1
+    else:
+        data.iloc[:, 1] *= 1
+
     # solver args
     solver_args = {
         #'plasma': XenonPlasma(),
-        'plasma': set_plasma_type(args.plasma), # use -p <plasma-string-name>
+        'plasma': plasma,
         #'probe': SSPL(0.010, 0.0079),
-        'probe': blp(),
-        'data': get_lang_data(),                # use -f <file-path\file-name.csv>
+        'probe': probe,
+        'data': data,                # use -f <file-path\file-name.csv>
         }
 
     # create page
@@ -205,9 +292,6 @@ def main():
 
     # run loop
     app.mainloop()
-    
-
-
 
 
 def old_main_2():

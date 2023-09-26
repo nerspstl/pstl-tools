@@ -1,0 +1,19 @@
+{
+    "name"          :   "Langmuir Solver",
+    "description"   :   "solves an IV Langmuir trace",
+    "plasma"    :   {"define" :
+        {
+            "name"          :   "Rocket Chamber Background Gas (Xenon)",
+            "description"   :   "Xenon gas",
+            "neutral_gas"   :   "xenon",
+            "massses"       :   {"m_i":null,"m_e":null},
+            "amu"           :   true,
+            "args"          :   [],
+            "kwargs"        :   {}
+        }
+    },
+    "probe"     :   {"file_load"    :   "tests/langmuir/settings_BLP.json"},
+    "data"      :   {"file_load"    :   "tests/langmuir/settings_lang_data.json"},
+    "args"          :   [],
+    "kwargs"        :   {}
+}

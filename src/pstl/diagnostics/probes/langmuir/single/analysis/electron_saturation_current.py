@@ -13,7 +13,7 @@ from numpy.polynomial import Polynomial as P
 from pstl.utls.verify import verify_type, verify_array_polarity
 from pstl.utls.helpers import interpolate
 from pstl.utls.functionfit.helpers import find_fit
-from pstl.diagnostics.probes.langmuir.single.analysis.floating_potential import get_floating_potential
+from pstl.diagnostics.probes.langmuir.single.analysis.floating_potential import get_floating_potential, check_for_floating_potential
 from pstl.diagnostics.probes.langmuir.single.analysis.electron_temperaure import get_electron_temperature
 # from funcs_plasma_potential import get_plasma_potential
 
@@ -112,7 +112,7 @@ def get_electron_saturation_current_fit(
         verify_type(V_s, (int, float, np.int64, np.float64, np.ndarray), 'V_s')
         istart = np.where(voltage < V_s)[0][-1]+1
     else:  # uses vf
-        istart = np.where(voltage < V_f)[0][-1]+1
+        istart = np.where(voltage > V_f)[0][0]
 
     # get stoping splicing index of data (aka length of data)
     iend = len(voltage)

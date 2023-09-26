@@ -12,8 +12,8 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk  # type: ignore
 
 from pstl.utls import constants as c
-from pstl.diagnostics.probes.langmuir.single.classes import available_plasma_properties
-from pstl.diagnostics.probes.langmuir.single.analysis.solver import SingleLangmuirProbeSolver
+from pstl.diagnostics.probes.langmuir.single.helpers import available_plasma_properties
+from pstl.diagnostics.probes.langmuir.single.analysis.solvers.solvers import SingleLangmuirProbeSolver
 
 
 class Widgets:

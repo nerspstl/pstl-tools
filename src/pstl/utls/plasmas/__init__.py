@@ -4,4 +4,6 @@ from pstl.utls.plasmas.classes import (
     ArgonPlasma,
     XenonPlasma,
     NeonPlasma,
+    KryptonPlasma,
+    setup,
 )   # type: ignore

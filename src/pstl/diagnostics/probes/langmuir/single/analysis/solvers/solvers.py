@@ -1,14 +1,21 @@
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Dict
+import json
 
 import numpy as np
 import pandas as pd
 
+from pstl.utls.abc import PSTLObject
 from pstl.utls.plasmas import Plasma
+from pstl.utls.plasmas import setup as plasma_setup
+from pstl.utls.data import setup as data_setup
+from pstl.diagnostics.probes.langmuir.single import setup as probe_setup
+from pstl.diagnostics.probes import Probe
+
 from pstl.utls.preprocessing import preprocessing_filter, preprocess_filter, smooth_filter
 from pstl.diagnostics.probes.langmuir.single import SingleProbeLangmuir
 
-from pstl.diagnostics.probes.langmuir.single.analysis.algorithm import topham, lobbia
+from pstl.diagnostics.probes.langmuir.single.analysis.algorithms import topham, lobbia
 from pstl.diagnostics.probes.langmuir.single.analysis.floating_potential import get_floating_potential
 from pstl.diagnostics.probes.langmuir.single.analysis.ion_saturation_current import get_ion_saturation_current, get_ion_saturation_current_density
 from pstl.diagnostics.probes.langmuir.single.analysis.electron_temperaure import get_electron_temperature
@@ -24,9 +31,82 @@ get_lambda_D = add_empty_dict(absorb_extra_args_kwargs(lambda_D))
 get_sheath_type = add_empty_dict(absorb_extra_args_kwargs(get_sheath_type))
 
 # maybe a concrete class called ProbeData that would jsut be raw_data, deleted_data, filtered_data, smoothed_data
+singe_langmuir_probe_solver_setup_funcs = {
+    "plasma"    :   plasma_setup,
+    "probe"     :   probe_setup,
+    "data"      :   data_setup,
+}
 
 
-class DiagnosticData:
+def setup(settings):
+    """
+    Creates and returns a SingleProbeLangmuirSolver object based on settings dictionary passed in.
+    The settings parameter must have keys 'plasma', 'probe', and 'data', where in
+    each is a dictionary with either a key being 'define' or 'file_load'. If 'define',
+    there is another dictionary that defines all need properties to make the object. In
+    the 'file_load' case, the entry is a string that is the file path to load a json file
+    that has all the needed properties to make the object.
+    
+    Keys:
+        'plasma': dict[dict | str]   ->  Plasma object defining properties or path to json file 
+        'probe' : dict[dict | str]   ->  Probe object defining properties or path to json file
+        'data'  : dict[dict | str]   ->  Data object defining properties or path to json file
+    (optional)
+        'name'          : str   ->  name designation for object
+        'description'   : str   ->  description of object
+        'args'          : tuple ->  addional position arguments
+        'kwargs'        : dict  ->  addional keyword arguments
+    Returns: Solver Object
+    """
+    def load_json(file,*args, **kwargs):
+        with open(file) as f:
+            json_data = json.load(f)
+        return json_data
+    def define_or_load(key, setup):
+        define = "define"
+        file_load = "file_load"
+        out = None
+        if key in settings:
+            what2do = settings[key]
+            if define in what2do:
+                out = setup(what2do[define])
+            elif file_load in what2do:
+                try:
+                    out = load_json(what2do[file_load])
+                except FileNotFoundError as error:
+                    raise error
+                except:
+                    raise Exception("Something else went wrong loading file '%s"%(what2do[file_load]))
+        else:
+            raise ValueError("'%s' is not a proper key. Only '%s' and '%s' are accepted"%(key,define,file_load))
+        return out
+    
+    objects = {"plasma":Plasma,
+                "probe":Probe,
+                "data":pd.DataFrame}
+
+    # get plasma, probe, and data objects for solver
+    for k, obj in enumerate(objects):
+        objects[obj] = define_or_load(
+            obj,
+            singe_langmuir_probe_solver_setup_funcs[obj]
+            )
+        
+    # get solver other settings
+    name = settings.get("name",None)
+    description = settings.get("name",None)
+    args = settings.get("args", (None))
+    kwargs = settings.get("kwargs",{})
+    # get solver
+    solver = SingleLangmuirProbeSolver(
+        objects["plasma"],
+        objects["probe"],
+        objects["data"],
+        *args,name=name, description=description,**kwargs)
+    return solver
+
+
+class DiagnosticData(PSTLObject):
     def __init__(self, data, deleted_data=None, filtered_data=None, smoothed_data=None, *args, **kwargs):
         # set different data versions
         self.set_data(
@@ -37,6 +117,9 @@ class DiagnosticData:
         )
 
     def set_data(self, raw_data, source=0, deleted_data=None, filtered_data=None, smoothed_data=None):
+        """
+        Takes raw_data
+        """
         self._raw_data = raw_data
         self._deleted_data = deleted_data
         self._filtered_data = filtered_data
@@ -56,7 +139,7 @@ class DiagnosticData:
             source = reversed_sources.get(source, None)
 
         # choose data source
-        if source == 0:
+        if source == 0: # Best
             if smoothed_data is True:
                 # get smoothed of filtered data
                 raise NotImplementedError
@@ -72,9 +155,10 @@ class DiagnosticData:
             else:
                 data = raw_data
 
-        elif source == 1:
+        elif source == 1:   # raw data
             data = raw_data
-        elif source == 2:
+
+        elif source == 2:   # filtered data
             if filtered_data is True:
                 filtered_data = pd.DataFrame
             elif filtered_data is False or filtered_data is None:
@@ -85,6 +169,7 @@ class DiagnosticData:
                 raise TypeError(
                     "'filtered_data' can only type pd.DataFrame, bool, None: ", type(filtered_data))
             data = filtered_data
+
         elif source == 3:   # tecniquely filtered and and smoothed if filtered is True and smoothed is True
             if smoothed_data is True:
                 smoothed_data = pd.DataFrame
@@ -96,6 +181,7 @@ class DiagnosticData:
                 raise TypeError(
                     "'smoothed_data' can only type pd.DataFrame, bool, None: ", type(smoothed_data))
             data = smoothed_data
+
         else:  # makes a table of options if error occurs
             table = "\n".join(
                 [f"{k}\t{v}" for k, v in available_sources.items()])
@@ -122,6 +208,7 @@ class PlasmaProbeSolver(DiagnosticData, ABC):
                  deleted_data: pd.DataFrame | bool | None = None,
                  filtered_data: pd.DataFrame | bool | None = None,
                  smoothed_data: pd.DataFrame | bool | None = None,
+                 name: str | None = None, description: str | None = None,
                  *args, **kwargs) -> None:
         # super(ABC, self).__init__()
         DiagnosticData.__init__(
@@ -180,10 +267,10 @@ class PlasmaLangmuirProbeSolver(PlasmaProbeSolver):
     def __init__(self, Plasma: Plasma, Probe, Data, *args, **kwargs) -> None:
         super().__init__(Plasma, Probe, Data, *args, **kwargs)
 
-        self._data_e = self.data.copy()
+        self._data_e = self.data.copy() # type: ignore
 
     def update_current_e(self, curret_i):
-        self.data_e.current = np.subtract(self.data.current, curret_i)
+        self.data_e.current = np.subtract(self.data.current, curret_i)  # type: ignore
 
     @property
     def data_e(self):
@@ -250,8 +337,8 @@ class SingleLangmuirProbeSolver(PlasmaLangmuirProbeSolver):
         # HARD CODEDIN
         func = method_selector(algo, available_algorithms,
                                available_algorithm_functions)
-        data, results = func(
-            self.data.voltage, self.data.current,
+        data, results = func(   
+            self.data.voltage, self.data.current,   # type: ignore
             self.probe.shape, self.probe.radius, self.probe.area,
             self.plasma.m_i, m_e=self.plasma.m_e,
         )

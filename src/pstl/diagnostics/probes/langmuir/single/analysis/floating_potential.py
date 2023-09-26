@@ -99,8 +99,16 @@ def check_for_floating_potential(V_f, voltage, current, *args, **kwargs):
 
     return V_f
 
-
 def get_above_floating_potential(V_f, voltage, current, *args, **kwargs):
+    # Once floating Potential is found, find its index w.r.t. data
+    istart = np.where(voltage > V_f)[0][0]
+    # Get data from positive current values (above floating)
+    xdata = voltage[istart:]
+    ydata = current[istart:]
+
+    return istart, xdata, ydata
+
+def get_at_and_above_floating_potential(V_f, voltage, current, *args, **kwargs):
     # Once floating Potential is found, find its index w.r.t. data
     istart = np.where(voltage < V_f)[0][-1]+1
     # Get data from positive current values (above floating)

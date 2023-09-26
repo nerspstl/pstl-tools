@@ -1,0 +1,8 @@
+{
+    "name"      :   "Test NSTAR BLP IV Trace",
+    "file"      :   "/home/tyjoto/github-work/pstl-tools/tests/langmuir/lang_data.csv",
+    "file_type" :   ".csv",
+    "args"      :   [],
+    "kwargs"    :   {"delimiter":",","header":null, "names":["voltage","current"],"skiprows": null}
+
+}

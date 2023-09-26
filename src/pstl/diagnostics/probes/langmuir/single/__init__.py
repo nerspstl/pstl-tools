@@ -4,6 +4,7 @@ from pstl.diagnostics.probes.langmuir.single.classes import (
     CylindericalSingleProbeLangmuir, 
     SphericalSingleProbeLangmuir,
     PlanarSingleProbeLangmuir,
+    setup
 )
 
 

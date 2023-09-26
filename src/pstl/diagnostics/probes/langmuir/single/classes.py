@@ -10,6 +10,40 @@ available_probe_classes = [
     ["planer", "planar"],
 ]
 
+def setup(settings):
+    """
+    Creates and returns a Langmuir probe object  based on settings dictionary passed in.
+    The settings parameter must have keys 'shape' and 'dimensions'.
+    
+    Keys:
+        'shape'     : str   ->  geometery shape of probe ['cylinderical', 'spherical', or 'planar']
+        'dimensions': dict  ->  probe dimensions    [{'diameter':<value>,'length':<value>}]
+    (optional)
+        'name'      : str   ->  name designation for probe 
+        'args'      : tuple ->  addional position arguments
+        'kwargs'    : dict  ->  addional keyword arguments
+
+    Returns: Probe Object
+        """
+    shape = settings["shape"].lower()
+    if shape in available_probe_classes[0]:
+        Probe = CylindericalSingleProbeLangmuir
+    elif shape in available_probe_classes[1]:
+        Probe = SphericalSingleProbeLangmuir
+    elif shape in available_probe_classes[2]:
+        Probe = PlanarSingleProbeLangmuir
+    else:
+        raise ValueError("'%s' is not a valid option."%(shape))
+    name = settings.get("name",None)
+    description = settings.get("description",None)
+    dimensions = settings["dimensions"]
+    args = settings.get("args", (None))
+    kwargs = settings.get("kwargs",{})
+    kwargs["name"] = kwargs.get("name","") if name is None else name
+    kwargs["description"] = kwargs.get("description","") if description is None else description
+    probe = Probe(*args,**dimensions,**kwargs)
+    return probe
+
 class SingleProbeLangmuir(Probe, ABC):
     def __init__(self, diameter, *args, shape="Unknown", **kwargs) -> None:
         self._diameter = float(diameter)

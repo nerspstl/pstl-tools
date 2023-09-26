@@ -1,12 +1,8 @@
-from abc import ABC
+from abc import ABC, abstractmethod, abstractproperty
 
-import numpy as np
-
-class Probe(ABC):
-    def __init__(self,name=None, description=None) -> None:
+class PSTLObject(ABC):
+    def __init__(self) -> None:
         super().__init__()
-        self._name = name
-        self._description = description
 
     @property
     def name(self):
@@ -16,8 +12,7 @@ class Probe(ABC):
         if isinstance(string, (str, type(None))):
             self._name = string
         else:
-            raise TypeError("Name change must be str or None type, not type '%s'"%(str(type(string))))
-
+            raise TypeError("'%s' Must be a str or None type, not %s"%(str(string),str(type(string))))
     @property
     def description(self):
         return self._description
