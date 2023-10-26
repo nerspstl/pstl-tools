@@ -1,0 +1,51 @@
+{
+    "name"          :   "Langmuir Solver",
+    "description"   :   "solves an IV Langmuir trace",
+    "plasma"    :   {"BUILD" :
+        {
+            "name"          :   "Rocket Chamber Background Gas (Xenon)",
+            "description"   :   "Xenon gas",
+            "neutral_gas"   :   "xenon",
+            "masses"       :   {"m_i":null,"m_e":null},
+            "amu"           :   true
+        }
+    },
+    "probe"     :   {"BUILD_FROM_FILE"    :   "tests/langmuir/settings_BLP.json"},
+    "data"      :   {"BUILD_FROM_FILE"    :   "tests/langmuir/settings_lang_data_copy.json"},
+    "methods"   :   {"algorithm"    :   "topham"},
+    "properties":   {},
+    "algorithm_args"    :   [],
+    "algorithm_kwargs"  :   {
+        "floating_potential_kwargs"    :   {"interpolate"   :   "linear"},
+        "plasma_potential_kwargs"      :   {},
+        "electron_temperature_kwargs"  :   {
+            "fit_kwargs"    :   {
+                "fitmax"    :   1,
+                "bitmax"    :   1,
+                "istart"    :   7,
+                "iend"      :   18,
+                "printlog"  :   false
+            }
+        },
+        "electron_density_kwargs"      :   {},
+        "electron_saturation_current_kwargs"   :   {
+            "fit_kwargs"    :   {
+                "fitmax"    :   1,
+                "bitmax"    :   1,
+                "istart"    :   32,
+                "iend"      :   -1,
+                "printlog" :   false
+            }
+        },
+        "electron_saturation_current_density_kwargs"   :   {},
+        "ion_density_kwargs"      :   {},
+        "ion_saturation_current_kwargs"   :   {},
+        "ion_saturation_current_density_kwargs"   :   {},
+        "electron_debye_length_kwargs" :   {},
+        "r_p/lambda_De_kwargs"     :   {},
+        "sheath_kwargs"            :   {},
+        "I_i_thin_kwargs"          :   {},
+        "I_i_transitional_kwargs"  :   {},
+        "I_i_thick_kwargs"         :   {}
+    }
+}

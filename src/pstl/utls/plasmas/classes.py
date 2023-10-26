@@ -1,4 +1,5 @@
 from pstl.utls import constants as c
+from pstl.utls.objects import setup as object_setup
 
 available_plasma_classes = {
     0   :   ["custom"],
@@ -8,7 +9,7 @@ available_plasma_classes = {
     4   :   ["neon"],
 }
 
-def setup(settings):
+def setup(settings, *args, **kwargs):
     """
     Creates and returns a plasma object based on settings dictionary passed in.
     The settings parameter must have keys 'neutral_gas' and 'masses'. 'masses'
@@ -30,7 +31,7 @@ def setup(settings):
     Other Notes:
         mass of an electron is 1/1836 in amu --or-- 5.4466e-4
         """
-    shape = settings["neutral_gas"].lower()
+    shape = settings.pop("neutral_gas").lower()
     if shape in available_plasma_classes[0]:
         Plasma_ = Plasma
     elif shape in available_plasma_classes[1]:
@@ -43,17 +44,19 @@ def setup(settings):
         Plasma_ = NeonPlasma
     else:
         raise ValueError("'%s' is not a valid option."%(shape))
-    name = settings.get("name",None)
     masses = settings["masses"]
     amu = settings.get("amu", False)
     if amu is True:
-        masses["m_i"] = (masses["m_i"]*c.m_p if masses["m_i"] is not None else None) if "m_i" in masses else None
-        masses["m_e"] = (masses["m_e"]*c.m_p if masses["m_e"] is not None else None) if "m_e" in masses else None
-    args = settings.get("args", (None))
-    kwargs = settings.get("kwargs",{})
-    kwargs["name"] = kwargs.get("name","") if name is None else name
-    plasma = Plasma_(*args,**masses,**kwargs)
-    return plasma
+        settings["m_i"] = (masses["m_i"]*c.m_p if masses["m_i"] is not None else None) if "m_i" in masses else None
+        settings["m_e"] = (masses["m_e"]*c.m_p if masses["m_e"] is not None else None) if "m_e" in masses else None
+    output: Plasma = object_setup(
+        *args,
+        settings=settings,
+        builders={},
+        Builder=Plasma_,
+        **kwargs,
+    )
+    return output
 
 
 class Plasma:

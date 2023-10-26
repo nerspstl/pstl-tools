@@ -66,7 +66,6 @@ def cylinderical_func_method(voltage, area, n0, V_s, m_i, KT_e, *args, **kwargs)
     return I_i, extras
 
 def spherical_method(voltage, current, *args, **kwargs):
-
     # check  and setup xdata,ydata based on floaing potential
     V_f = kwargs.pop("V_f", None)
     V_f = check_for_floating_potential(V_f, voltage, current, **kwargs)

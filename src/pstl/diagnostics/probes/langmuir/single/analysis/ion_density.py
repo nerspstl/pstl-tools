@@ -3,7 +3,7 @@ import numpy as np
 from numpy.polynomial import Polynomial as P
 
 from pstl.utls import constants as c
-from pstl.utls.helpers import find_fit
+from pstl.utls.functionfit.helpers import find_fit
 from pstl.utls.plasmas.sheath import thick, transitional
 from pstl.utls.helpers import method_selector, method_function_combiner
 

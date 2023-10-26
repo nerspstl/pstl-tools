@@ -1,0 +1,9 @@
+{
+    "name"      :   "Test NSTAR BLP IV Trace",
+    "file"      :   "/home/tyjoto/janus/database/PEPL_LVTF-NSTAR-GRND-DISCHARGE-TH01-P0-BLP7-2023_02_07_1759-01.tab",
+    "file_type" :   ".csv",
+    "negative"  :   true,
+    "args"      :   [],
+    "kwargs"    :   {"delimiter":"\t","header":0, "names":["voltage","current"],"skiprows": null}
+
+}

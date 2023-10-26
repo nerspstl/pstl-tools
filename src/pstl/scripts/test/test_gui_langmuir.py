@@ -1,14 +1,18 @@
 import tkinter as tk
 import argparse
 import json
+import traceback
 
 import numpy as np
 import pandas as pd
 from matplotlib import style
 
-from pstl.gui.langmuir import LinearSemilogyCanvas, LinearSemilogyDoubleCanvas, LinearSemilogyDoubleCanvasSingleProbeLangmuir
+from pstl.gui.langmuir.canvas import LinearSemilogyCanvas, LinearSemilogyDoubleCanvas, LinearSemilogyDoubleCanvasSingleProbeLangmuir
 from pstl.gui.langmuir import LinearSemilogyDoubleCanvasSingleProbeLangmuir as Canvas
 from pstl.gui.langmuir import LinearSemilogySingleLangmuirCombinedData as LSSLCD
+from pstl.gui.langmuir import LinearSemilogySingleLangmuirCombinedData2 as LSSLCD2
+from pstl.gui.langmuir import LSSLCD_setup
+from pstl.gui.langmuir import LSSLCD2_setup
 
 from pstl.gui.langmuir import SingleProbeLangmuirResultsFrame as Panel
 from pstl.gui.langmuir import SingleProbeLangmuirResultsFrame
@@ -16,6 +20,7 @@ from pstl.gui.langmuir import SingleProbeLangmuirResultsFrame
 from pstl.utls.plasmas import XenonPlasma, ArgonPlasma, NeonPlasma, KryptonPlasma, Plasma
 from pstl.utls.plasmas import setup as plasma_setup
 from pstl.utls.errors.plasmas import FailedPlasmaClassBuild
+from pstl.utls.errors.langmuir import Flagged
 
 from pstl.utls.data import setup as data_setup
 
@@ -24,6 +29,7 @@ from pstl.diagnostics.probes.langmuir.single import CylindericalSingleProbeLangm
 from pstl.diagnostics.probes.langmuir.single import PlanarSingleProbeLangmuir as PSPL
 from pstl.diagnostics.probes.langmuir.single import setup as probe_setup
 
+from pstl.diagnostics.probes.langmuir.single.analysis.solvers.solvers import SingleLangmuirProbeSolver as SLPS
 from pstl.diagnostics.probes.langmuir.single.analysis.solvers.solvers import SingleLangmuirProbeSolver as SLPS
 
 style.use("bmh")
@@ -40,11 +46,12 @@ parser.add_argument('-s','--delimiter', help="sets sep or delimiter of tabular d
 parser.add_argument('-g','--neutral_gas', help="define gas composition i.e. Xenon, Argon, Neon",default="",type=str)
 parser.add_argument('-p','--probe', help="define probe shape diameter length* where *only for spherical",nargs="*")
 
-parser.add_argument('-O','--output_settings_file', help="location of output results defining json file",type=str)
+#parser.add_argument('-O','--output_settings_file', help="location of output results defining json file",type=str)
 parser.add_argument('-G','--neutral_gas_settings_file', help="location of neutral gas (and plasma) defining json file",type=str)
 parser.add_argument('-P','--probe_settings_file', help="location of probe defining json file",type=str)
 parser.add_argument('-D','--data_settings_file', help="location of data defining json file",type=str)
-parser.add_argument('-S', '--solver_settings_file', help="location of solver settings json file",type=str)
+parser.add_argument('-L', '--solver_settings_file', help="location of solver settings json file",type=str)
+parser.add_argument('-S', '--settings_file', help="location of whole gui settings json file",type=str)
 args = parser.parse_args()
 
 
@@ -219,70 +226,15 @@ def logic_plasma_type(string, *args, **kwargs):
 
     return plasma
 
-
-
-
-def main():
-    if args.probe_settings_file is None and args.probe is None:
-        raise ValueError("either probe_settings_file or probe must be defined")
-
-    if args.neutral_gas_settings_file is None and args.plasma is None:
-        raise ValueError("either neutral_gas_settings_file or plasma must be defined")
-    
-    if args.data_settings_file is None and args.fname is None:
-        raise ValueError("either data_settings_file or fname must be defined")
-
+def gui_langmuir_from_file(settings_file:str):
     # initiate app
     app = tk.Tk()
-    
-    # load settings
-    settings = get_settings()
+    app.title("PSTL GUI Langmuir")
 
-    # probe settings
-    if args.probe_settings_file is None: 
-        probe = choose_probe_type() if args.gas is None else set_plasma_type(args.gas)
-    else:
-        with open(args.probe_settings_file) as f: 
-            probe_settings = json.load(f)
-        probe = probe_setup(probe_settings)
+    with open(settings_file) as f: 
+        settings = json.load(f)
+    page = LSSLCD2_setup(settings, master=app)
 
-    # plasma settings
-    if args.neutral_gas_settings_file is None: 
-        plasma = choose_plasma_type() 
-    else:
-        with open(args.neutral_gas_settings_file) as f: 
-            plasma_settings = json.load(f)
-        plasma = plasma_setup(plasma_settings)
-    
-    # data settings
-    if args.data_settings_file is None: 
-        try:
-            data = pd.read_csv(args.fname)
-        except:
-            raise ValueError("fname unable to load, must specify data_file or fix fname")
-    else:
-        with open(args.data_settings_file) as f:
-            data_settings = json.load(f)
-        data = data_setup(data_settings)
-    
-    # if negative
-    if args.negative:
-        data.iloc[:, 1] *= -1
-    else:
-        data.iloc[:, 1] *= 1
-
-    # solver args
-    solver_args = {
-        #'plasma': XenonPlasma(),
-        'plasma': plasma,
-        #'probe': SSPL(0.010, 0.0079),
-        'probe': probe,
-        'data': data,                # use -f <file-path\file-name.csv>
-        }
-
-    # create page
-    # create combined langmuir frame that sits on one page
-    page = LSSLCD(**solver_args,master=app,**settings)
     # pack it on
     page.pack()
 
@@ -292,6 +244,179 @@ def main():
 
     # run loop
     app.mainloop()
+    
+def gui_langmuir(settings:dict):
+
+    # initiate app
+    app = tk.Tk()
+    app.title("PSTL GUI Langmuir")
+    try: 
+        page = LSSLCD2_setup(settings, master=app)
+        # pack it on
+        page.pack()
+    except Exception as e:
+        file = settings["name"]+".tab"
+        print("\nFAILED in gui_langmuir: ",file,"\n")
+        print(e)
+        traceback.print_exc()
+        #with open("/home/tyjoto/janus/temp/fail.tab") as f:
+        #    f.write(file+"\n")
+
+        pass
+
+    except:
+        file = settings["name"]+".tab"
+        print("\nFAILED in gui_langmuir: ",file,"\n")
+        traceback.print_exc()
+        #with open("/home/tyjoto/janus/temp/fail.tab") as f:
+        #    f.write(file+"\n")
+
+        pass
+    else:
+        def save_n_close():
+            page.save_n_close()
+            app.destroy()
+        # save and close
+        btn_savenclose = tk.Button(app,text="Save and Close app", command=save_n_close)
+        btn_savenclose.pack()
+
+
+
+    
+    finally:
+        def raise_flagged():
+            raise Flagged
+
+
+        # close button
+        btn = tk.Button(app,text="Close App",command=app.destroy)
+        btn.pack()
+
+        # flag button
+        btn_flag = tk.Button(app,text="Flag",command=raise_flagged)
+        btn_flag.pack()
+
+        try:
+            # run loop
+            app.mainloop()
+        except Flagged as e:
+            app.destroy()
+            raise Flagged(repr("{0}".format(str(settings.get("name","Unknown")))))
+
+
+
+
+def main():
+    if args.settings_file is None:
+        if args.probe_settings_file is None and args.probe is None:
+            raise ValueError("either probe_settings_file or probe must be defined")
+
+        if args.neutral_gas_settings_file is None and args.plasma is None:
+            raise ValueError("either neutral_gas_settings_file or plasma must be defined")
+        
+        if args.data_settings_file is None and args.fname is None:
+            raise ValueError("either data_settings_file or fname must be defined")
+
+    # initiate app
+    app = tk.Tk()
+    app.title("PSTL GUI Langmuir")
+    
+    # load settings
+    if args.settings_file is None:
+        settings = get_settings()
+
+        # probe settings
+        if args.probe_settings_file is None: 
+            probe = choose_probe_type()         
+        else:
+            with open(args.probe_settings_file) as f: 
+                probe_settings = json.load(f)
+            probe = probe_setup(probe_settings)
+
+        # plasma settings
+        if args.neutral_gas_settings_file is None: 
+            plasma = choose_plasma_type() if args.gas is None else set_plasma_type(args.gas)
+        else:
+            with open(args.neutral_gas_settings_file) as f: 
+                plasma_settings = json.load(f)
+            plasma = plasma_setup(plasma_settings)
+        
+        # data settings
+        if args.data_settings_file is None: 
+            try:
+                data = pd.read_csv(args.fname)
+            except:
+                raise ValueError("fname unable to load, must specify data_file or fix fname")
+        else:
+            with open(args.data_settings_file) as f:
+                data_settings = json.load(f)
+            data = data_setup(data_settings)
+        # if negative
+        if args.negative:
+            data.iloc[:, 1] *= -1
+        else:
+            data.iloc[:, 1] *= 1
+
+        # solver settings
+        if args.solver_settings_file is None: 
+            # solver args
+            solver_args = {
+                #'plasma': XenonPlasma(),
+                'plasma': plasma,
+                #'probe': SSPL(0.010, 0.0079),
+                'probe': probe,
+                'data': data,                # use -f <file-path\file-name.csv>
+                }
+            # create page
+            # create combined langmuir frame that sits on one page
+            print(solver_args,"\n",settings)
+            page = LSSLCD(**solver_args,master=app,**settings)
+        else:
+            with open(args.solver_settings_file) as f:
+                solver_settings = json.load(f)
+            solver = data_setup(solver_settings)
+            settings["solver"] = solver
+            page = LSSLCD2_setup(settings, master=app)
+
+    else:
+        with open(args.settings_file) as f: 
+            settings = json.load(f)
+        try:
+            page = LSSLCD2_setup(settings, master=app)
+        except:
+            traceback.print_exc()
+            file = settings["name"]+".tab"
+            print("\nFAILED: ",file,"\n")
+            #with open("/home/tyjoto/janus/temp/fail.tab") as f:
+            #    f.write(file+"\n")
+
+            pass
+        else:
+            def save_n_close():
+                page.save_n_close()
+                app.destroy()
+            # save and close
+            btn_savenclose = tk.Button(app,text="Save and Close app", command=save_n_close)
+            btn_savenclose.pack()
+
+
+
+        
+        finally:
+
+
+            # close button
+            btn = tk.Button(app,text="Close App",command=app.destroy)
+            btn.pack()
+
+            # flag button
+            btn_flag = tk.Button(app,text="Flag",command=lambda: print(repr("Flagged: {0}".format(str(settings.get("name","Unknown"))))))
+            btn_flag.pack()
+
+            # run loop
+            app.mainloop()
+
+
 
 
 def old_main_2():
@@ -334,7 +459,7 @@ def old_main_2():
     solver.preprocess()
 
     # solve for data
-    solver.find_plasma_properties()
+    solver.solve()
 
     # make plots of solved for plasma parameters
     canvas.make_plot(solver)

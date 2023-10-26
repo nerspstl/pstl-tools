@@ -1,5 +1,6 @@
 {
-    "canvas"    :   {"filename":"canvas_json_path/filename.json"},
-    "panal"     :   {"filename":"panel_json_path/filename.json"},
-    "solver"    :   {"filename":"solver_json_path/filename.json"}
+    "name"              :   "TEST_LANGMUIR",
+    "canvas_kwargs"    :   {"FROM_FILE":"tests/langmuir/settings_canvas.json"},
+    "panel_kwargs"     :   {"FROM_FILE":"tests/langmuir/settings_panel.json"},
+    "solver"    :   {"BUILD_FROM_FILE":"tests/langmuir/settings_langmuir_solver_copy.json"}
 }

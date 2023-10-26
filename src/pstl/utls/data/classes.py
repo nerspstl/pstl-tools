@@ -44,6 +44,7 @@ def setup(settings):
         get_data_func = pd.read_excel
     else:
         raise ValueError("'%s' is not a valid option."%(shape))
+    negative = settings.get("negative", False)
     name = settings.get("name",None)
     description = settings.get("name",None)
     file = settings["file"]
@@ -52,6 +53,7 @@ def setup(settings):
     dataframe_args = kwargs.get("dataframe_args", [])
     dataframe_kwargs = kwargs.get("dataframe_kwargs",{})
     data = get_data_func(file,*args,**kwargs)
+    data.iloc[:,1] = data.iloc[:,1]*-1 if negative is True else data.iloc[:,1] # type: ignore
     pstl_data = PSTLDataFrame(data,*dataframe_args,
                               name=name,description=description,
                               **dataframe_kwargs) # type: ignore

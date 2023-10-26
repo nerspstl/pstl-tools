@@ -1,10 +1,8 @@
 {
     "name"  :   "Ball Langmuir Probe (BLP)",
     "shape" :   "spherical",
-    "dimensions":{
-        "diameter"  :   1e-2,
-        "length"    :   7.9e-3
-    },
+    "diameter"  :   1e-2,
+    "length"    :   7.9e-3,
     "args"      :   [],
     "kwargs"    :   {}
 }

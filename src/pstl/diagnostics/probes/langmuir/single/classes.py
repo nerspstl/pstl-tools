@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod, abstractproperty
 
 import numpy as np
 
+from pstl.utls.objects import setup as object_setup
 from pstl.diagnostics.probes.classes import Probe
 
 available_probe_classes = [
@@ -10,7 +11,7 @@ available_probe_classes = [
     ["planer", "planar"],
 ]
 
-def setup(settings):
+def setup(settings, *args, **kwargs):
     """
     Creates and returns a Langmuir probe object  based on settings dictionary passed in.
     The settings parameter must have keys 'shape' and 'dimensions'.
@@ -24,8 +25,9 @@ def setup(settings):
         'kwargs'    : dict  ->  addional keyword arguments
 
     Returns: Probe Object
-        """
-    shape = settings["shape"].lower()
+    """
+    # determine shape of 
+    shape = settings.pop("shape").lower()
     if shape in available_probe_classes[0]:
         Probe = CylindericalSingleProbeLangmuir
     elif shape in available_probe_classes[1]:
@@ -34,15 +36,27 @@ def setup(settings):
         Probe = PlanarSingleProbeLangmuir
     else:
         raise ValueError("'%s' is not a valid option."%(shape))
-    name = settings.get("name",None)
-    description = settings.get("description",None)
-    dimensions = settings["dimensions"]
-    args = settings.get("args", (None))
-    kwargs = settings.get("kwargs",{})
-    kwargs["name"] = kwargs.get("name","") if name is None else name
-    kwargs["description"] = kwargs.get("description","") if description is None else description
-    probe = Probe(*args,**dimensions,**kwargs)
-    return probe
+    #def raise_missing_key_error(key):
+    #    raise KeyError("'%s' is not a defined key but needs to be"%(key))
+    # check if plasma, probe, and data are either given here or a part of solver_kwargs
+    #key = "dimensions"
+    #solver_kwargs = settings[key] if key in settings else raise_missing_key_error(key)
+    #to_args = {
+    #    "diameter"    :   ["dimensions", "diameter"],
+    #    "length"     :   ["dimensions", "length"],
+    #    }
+
+    # create new object with parameters (arguments)
+    output_object: SingleProbeLangmuir = object_setup(
+        *args,
+        settings=settings,
+        builders={},
+        Builder=Probe,
+    #    to_args=
+        **kwargs,
+    )
+
+    return output_object
 
 class SingleProbeLangmuir(Probe, ABC):
     def __init__(self, diameter, *args, shape="Unknown", **kwargs) -> None:

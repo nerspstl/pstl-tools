@@ -118,9 +118,20 @@ def get_at_and_above_floating_potential(V_f, voltage, current, *args, **kwargs):
     return istart, xdata, ydata
 
 
-def get_below_floating_potential(V_f, voltage, current, *args, **kwargs):
+def _get_below_floating_potential(V_f: float, voltage, current, *args, **kwargs):
     # Once floating Potential is found, find its index w.r.t. data
     iend = np.where(voltage < V_f)[0][-1]+1
+    # Get data from positive current values (above floating)
+    xdata = voltage[:iend]
+    ydata = current[:iend]
+
+    return iend, xdata, ydata
+def get_below_floating_potential(V_f: float, voltage, current, *args, **kwargs):
+    # Once floating Potential is found, find its index w.r.t. data
+    iV = np.where(voltage < V_f)[0]
+    iend = np.where(current > 0)[0][0]-1
+    #indexs = np.intersect1d(iV, iC)
+
     # Get data from positive current values (above floating)
     xdata = voltage[:iend]
     ydata = current[:iend]

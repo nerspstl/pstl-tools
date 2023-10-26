@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import numpy as np
 
@@ -27,3 +27,4 @@ class Probe(ABC):
             self._description = string
         else:
             raise TypeError("Description change must be str or None type, not type '%s'"%(str(type(string))))
+    

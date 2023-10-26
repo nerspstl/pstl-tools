@@ -1,52 +1,15 @@
-from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Sequence
 import tkinter as tk
-import json
-import csv
 
-import numpy as np
 import pandas as pd
+import numpy as np
+from scipy.signal import savgol_filter
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk  # type: ignore
 
-from pstl.utls import constants as c
-from pstl.diagnostics.probes.langmuir.single.helpers import available_plasma_properties
-from pstl.diagnostics.probes.langmuir.single.analysis.solvers.solvers import SingleLangmuirProbeSolver
-
-
-class Widgets:
-    # Initialize the class with empty dictionaries for each widget name
-    def __init__(self):
-        self.buttons = {}
-        self.canvases = {}
-        self.checkbuttons = {}
-        self.entries = {}
-        self.frames = {}
-        self.labels = {}
-        self.labelframes = {}
-        self.listboxes = {}
-        self.menus = {}
-        self.menubuttons = {}
-        self.messages = {}
-        self.optionmenus = {}
-        self.panedwindows = {}
-        self.radiobuttons = {}
-        self.scales = {}
-        self.scrollbars = {}
-        self.texts = {}
-        self.toplevels = {}
-
-
-class WidgetOrganizer:
-    def __init__(self) -> None:
-        self._widgets = Widgets()
-
-    @property
-    def widget(self):
-        return self._widgets
-
+from pstl.gui import WidgetOrganizer, Widgets
+from pstl.gui.langmuir.results import SaveResults
 
 class MatplotlibCanvas(tk.Frame):
     def __init__(self, master=None, cnf=None, *args, fig: Figure | None = None, ax: Axes | None = None,  **kwargs):
@@ -185,6 +148,55 @@ class LinearSemilogyCanvas(MatplotlibCanvasWToolbarSave):
             side=tk.RIGHT, fill=tk.BOTH, expand=True
         )
 
+class FirstDerivativeSingleProbeLangmuir(MatplotlibCanvasWToolbarSave):
+    def __init__(self, master=None, cnf={}, *args, fig: Figure | None = None, ax: Axes | None = None, saveas: str = "first_derivative.png", stype="png", **kwargs):
+        kwargs.setdefault("width", 5)
+        kwargs.setdefault("height", 4)
+        kwargs.setdefault("dpi", 100)
+        
+        super().__init__(master, cnf, *args, fig=fig, ax=ax, saveas=saveas, stype=stype, **kwargs)
+
+        self._state = False
+
+    def solve(self,solver):
+
+        try:
+            voltage = solver.data.voltage
+            current = solver.data.current
+
+            win_len = 3
+            polyorder = 1
+
+            gradient_1D = np.gradient(current, voltage)
+            smoothed_1D = savgol_filter(
+                current,
+                window_length=win_len,
+                polyorder=polyorder)
+            smoothed_1D = np.gradient(smoothed_1D, voltage)
+            smoothed_1D_savgol = savgol_filter(
+                current, 
+                window_length=win_len,
+                polyorder=polyorder,
+                deriv=1
+            )
+            self.ax.plot(voltage, gradient_1D, "-",label="np.gradient")
+            self.ax.plot(voltage, smoothed_1D,"-",label="savgol, then gradiend")
+            self.ax.plot(voltage, smoothed_1D_savgol,"-",label="sp.signal.savgol_filter")
+            self.ax.legend()
+    
+        except:
+            print("unable to make first derivative plot")
+            pass
+    
+    @property
+    def state(self):
+        return self._state
+    @state.setter
+    def state(self, change_to):
+        if isinstance(change_to, bool):
+            self._state = change_to
+        else:
+            raise TypeError("Must be a bool")
 
 class LinearSemilogyDoubleCanvas(tk.Frame):
     def __init__(self, master=None, cnf=None, saveas="figures.png", sappends=["_linear", "_semilogy"], n=2, sharex=True, **kwargs):
@@ -366,6 +378,28 @@ class LinearSemilogyDoubleCanvasSingleProbeLangmuir(LinearSemilogyDoubleCanvas):
         self.ion_saturation_fit = None
         self.ion_saturation_fill = None
 
+        # make 1der plot show hide buttons
+        canvas_1der = FirstDerivativeSingleProbeLangmuir(self,cnf)
+        canvas_1der.grid(row=0, column=0, sticky="NWSE")
+        self.widgets.frames["1der"] = canvas_1der
+        show_hide_btn = tk.Button(self,cnf,text="Show/Hide",command=self.show_hide)
+        show_hide_btn.grid(row=2, column=0,columnspan=2,sticky="NSEW")
+        self.widgets.frames["linear"].tkraise()
+        self.ax3 = canvas_1der.ax
+    def show_hide(self):
+        canvas_1der = self.widgets.frames["1der"]
+        canvas_linear = self.widgets.frames["linear"]
+        state = canvas_1der.state
+        if state is True: # is showing thus hide
+            canvas_linear.tkraise()
+            state = False
+        elif state is False: # not showing
+            canvas_1der.tkraise()
+            state = True
+
+        canvas_1der.state = state
+
+
     def set_xlabel_linear(self, label=None, *args, **kwargs):
         label = r"$V_{bias}\ [V]$" if label is None else label
         self.ax1.set_xlabel(label)
@@ -415,6 +449,19 @@ class LinearSemilogyDoubleCanvasSingleProbeLangmuir(LinearSemilogyDoubleCanvas):
                       voltage, current, *args, **kwargs)
         self.set_xlabel_semilogy()
         self.set_ylabel_semilogy()
+
+    def add_semilogy_trace(self, voltage, current, *args, label=None,**kwargs):
+        kwargs.setdefault("label", "Experimental Data")
+        kwargs.setdefault("color", "C0")
+        kwargs.setdefault("marker", "^")
+        kwargs.setdefault("markerfacecolor", "none")
+        # save data
+        #self.electron_trace = pd.DataFrame({'voltage': voltage, 'current': current})
+        self.add_plot(self.ax2.plot,
+                      voltage, current, *args, **kwargs)
+        label = r"$I_{probe}\ [A]$" if label is None else label
+        self.set_xlabel_semilogy()
+        self.set_ylabel_semilogy(label=label)
 
     def add_floating_potential(self, V_f, *args, **kwargs):
         kwargs.setdefault("label", rf"$V_{{f}} = {V_f:.2f}V$")
@@ -477,6 +524,8 @@ class LinearSemilogyDoubleCanvasSingleProbeLangmuir(LinearSemilogyDoubleCanvas):
         self.ion_saturation_fill = [xstart, xstop]
         self.add_to_both(self.ax1.axvspan, self.ax2.axvspan,
                          xstart, xstop, *args, **kwargs)
+    def add_1derivative(self, solver):
+        self.widgets.frames["1der"].solve(solver)
 
     def make_plot(self, solver):
         app = self
@@ -529,6 +578,37 @@ class LinearSemilogyDoubleCanvasSingleProbeLangmuir(LinearSemilogyDoubleCanvas):
         # turn on legend
         app.legend()
 
+        # add 1der plot
+        app.add_1derivative(solver)
+    def make_plot_basic(self, solver):
+        app = self
+        # make xdomain for fit plotting
+        xdomain = [np.min(solver.data.voltage), np.max(solver.data.voltage)]
+
+        # Make Plots ###
+        # add probe trace
+        app.add_probe_trace(solver.data.voltage, solver.data.current)
+        # add electron current
+        app.add_semilogy_trace(solver.data.voltage, solver.data.current)
+        # mark deleted points
+        app.add_deleted_points(solver.deleted_data.voltage,
+                               solver.deleted_data.current)
+
+        # Add to Plasma Properties to Plots
+        #app.add_floating_potential(solver.results["V_f"]["value"])
+        #app.add_plasma_potential(solver.results["V_s"]["value"])
+
+        # turn on legend
+        app.legend()
+        # add 1der plot
+        app.add_1derivative(solver)
+    
+    def clear_plots(self):
+        self.ax1.cla()
+        self.ax2.cla()
+        self.ax3.cla()
+
+
 
 def other():
     # Make save all button
@@ -545,499 +625,3 @@ def other():
         button_quit = tk.Button(master=root, text="Quit", command=root.destroy)
         button_quit.pack(side=tk.BOTTOM, expand=1, fill=tk.BOTH)
 
-
-class SingleProbeLangmuirResultsFrame(tk.Frame):
-    def __init__(self, master=None, cnf={}, *args, results=None, fname=None, ftype=None,**kwargs):
-        super().__init__(master, cnf, *args, **kwargs)
-
-        # add widgets organizer
-        self.widgets = Widgets()
-
-        # if results are not given
-        if results is None:
-            results = {}
-            for key in available_plasma_properties:
-                results[key] = {"value": 1, "other": None}
-        elif isinstance(results, dict):
-            pass
-        else:
-            raise ValueError(
-                "'results' must be dictionary: {}".format(type(results)))
-
-        # creat instance
-        self._results = results
-
-        # number of properties to display
-        grid_positions_list = self.grid_positions(results.keys())
-
-        # loop and create labels to display
-        labels = {}
-        row = 0 
-        for k, key in enumerate(results.keys()):
-            text = self.results[key]["value"]
-            unit = self.results[key]["other"]
-            unit = self.default_unit_format(key) if unit is None else unit
-            labels[key] = ResultOutput(key, text, unit, self, cnf) # these are frames of btn and label
-            row = grid_positions_list[k][0]
-            col = grid_positions_list[k][1]
-            labels[key].grid(row=row, column=col,
-                             sticky="NWSE", padx=5, pady=5)
-            
-        # add export frame (button&entry) to save results
-        frame_save = SaveResults(self.export_results, 
-                                 fname=fname, ftype=ftype,
-                                 master=self, cnf=cnf,
-                                 *args,**kwargs)
-        frame_save.grid(row=row+1,column=0,columnspan=3,sticky="NSWE", padx=5,pady=5)
-
-        self.widgets.frames.update(labels)
-
-        self.widgets.frames["save"] = frame_save
-
-        self.update_texts(results=self.results)
-
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
-    
-    def save(self):
-        self.widgets.frames["save"].save()
-
-    @property
-    def results(self):
-        return self._results
-
-    @results.setter
-    def results(self, val):
-        self.update_texts(val)
-        self._results = val
-
-    def update_label(self, key, text):
-        if key in self.widgets.frames:
-            self.widgets.frames[key].update_text(text=text)
-        else:
-            table = "\n".join(
-                [f"{k}\t{v}" for k, v in enumerate(self.widgets.frames)])
-            raise ValueError(
-                f"Matching key not found: {key}\nChoose from one of the available options:\n{table}")
-
-    def update_texts(self, results=None):
-        if results is None:
-            results = self.results
-
-        for key in results.keys():
-            text = self.default_text_format(key)
-            val = results[key]['value']
-            val = 0.0 if val is None else val
-            text = text.format(val)
-            self.update_label(key, text)
-
-    def export_results(self):
-        temp = self.results
-        results = {}
-
-        for key in temp.keys():
-            value = temp[key]["value"]
-            unit = temp[key].get("unit",self.default_unit_string(key))
-            results[key] = {"value":value,"unit":unit}
-        return results
-
-    def default_text_format(self, key):
-        if key == "V_f":
-            text = "{0:.2f}"
-        elif key == "V_s":
-            text = "{0:.2f}"
-        elif key == "I_is":
-            text = "{0:.2e}"
-        elif key == "n_i":
-            text = "{0:.2e}"
-        elif key == "I_es":
-            text = "{0:.2e}"
-        elif key == "KT_e":
-            text = "{0:.2f}"
-        elif key == "n_e":
-            text = "{0:.2e}"
-        elif key == "J_es":
-            text = "{0:.2e}"
-        elif key == "J_is":
-            text = "{0:.2e}"
-        elif key == "lambda_De":
-            text = "{0:.2e}"
-        elif key == "r_p/lambda_De":
-            text = "{0:.2e}"
-        elif key == "sheath":
-            text = "{0}"
-        else:
-            text = "{}"
-
-        return text
-    
-    def default_unit_string(self, key):
-        if key == "V_f":
-            text = "V"
-        elif key == "V_s":
-            text = "V"
-        elif key == "I_is":
-            text = "A"
-        elif key == "n_i":
-            text = "m^-3"
-        elif key == "I_es":
-            text = "A"
-        elif key == "KT_e":
-            text = "eV"
-        elif key == "n_e":
-            text = "m^-3"
-        elif key == "J_es":
-            text = "A/m^2"
-        elif key == "J_is":
-            text = "A/m^2"
-        elif key == "lambda_De":
-            text = "m"
-        elif key == "r_p/lambda_De":
-            text = "-"
-        elif key == "sheath":
-            text = "-"
-        else:
-            text = "{}"
-
-        return text
-
-    def default_unit_format(self, key):
-        if key == "V_f":
-            text = "V"
-        elif key == "V_s":
-            text = "V"
-        elif key == "I_is":
-            text = "A"
-        elif key == "n_i":
-            text = "m\u207B\u00B3"
-        elif key == "I_es":
-            text = "A"
-        elif key == "KT_e":
-            text = "eV"
-        elif key == "n_e":
-            text = "m\u207B\u00B3"
-        elif key == "J_es":
-            text = "A/m\u00B2"
-        elif key == "J_is":
-            text = "A/m\u00B2"
-        elif key == "lambda_De":
-            text = "m"
-        elif key == "r_p/lambda_De":
-            text = ""
-        elif key == "sheath":
-            text = ""
-        else:
-            text = "N/A"
-
-        return text
-
-    def grid_positions(self, lst, layout="two"):
-        # layout = "square"
-        if layout == "two":
-            func = self._two_layout
-        elif layout == "square":
-            func = self._square_layout
-        else:
-            raise ValueError("layout is not knonw: {layout}")
-        return func(lst)
-
-    def _sort_positions(self, num_items, num_rows, num_cols):
-        positions = []
-        for i in range(num_items):
-            row = int(i/num_cols)
-            col = i % num_cols
-            positions.append((row, col))
-
-        return positions
-
-    def _two_layout(self, lst):
-        num_items = len(lst)
-        num_rows = int(np.ceil(num_items/2))
-        num_cols = 2
-        return self._sort_positions(num_items, num_rows, num_cols)
-
-    def _square_layout(self, lst):
-        # Calculate the number of rows and columns needed for the closest square grid
-        num_items = len(lst)
-        grid_size = int(np.ceil(np.sqrt(num_items)))
-        num_rows = grid_size
-        num_cols = grid_size
-
-        # If the grid is larger than necessary, reduce the number of columns
-        if num_items < num_rows*num_cols:
-            num_cols = int(np.ceil(num_items/num_rows))
-
-        return self._sort_positions(num_items, num_rows, num_cols)
-
-class SaveResults(tk.Frame):
-    def __init__(self, command, fname=None, ftype=None, master=None, cnf={}, *args,**kwargs):
-        super().__init__(master,cnf, *args, **kwargs)
-
-        # create widgets
-        self.widgets = Widgets()
-
-        # create save button
-        btn_kwargs = kwargs.get("btn_kwargs", {})
-        btn_kwargs.setdefault("text", "Save")
-        btn_kwargs.setdefault("command",self.export_results)
-        btn = tk.Button(self, cnf, **btn_kwargs)
-
-        # create entry for filename and populate with default
-        entry_kwargs = kwargs.get("entry_kwargs", {})
-        #entry_kwargs.setdefault()
-        entry = tk.Entry(self, cnf,**entry_kwargs)
-
-        # pack away!
-        btn.grid(row=0, column=0, sticky="NSWE")
-        entry.grid(row=0, column=1, sticky="NSWE")
-
-        # change column weights
-        self.columnconfigure(1,weight=1)
-
-        # store
-        self.widgets.buttons["save"] = btn
-        self.widgets.entries["save"] = entry
-
-        # store command
-        self.command = command
-
-        # store file type to save to 
-        self.ftype = ftype
-
-        # store fname default
-        if fname is None:
-            fname = "output.txt"
-        entry.insert(0,fname)
-
-    def save(self):
-        self.export_results()
-
-    def export_results(self):
-        command = self.command
-        if callable(command):
-            results = command()
-        else:
-            results = command
-        ftype = self.ftype
-
-
-        # get current entry filename
-        fname = self.widgets.entries["save"].get()
-
-        if ftype is None or ftype.upper() == "CSV":
-            if fname is None:
-                fname = "output.csv"
-
-            with open(fname, "w") as outfile:
-                header = []
-                values = []
-                for key in results.keys():
-                    unit = results[key]["unit"]
-                    string = key+" - ["+unit+"]"
-                    header.append(string)
-                for key in results.keys():
-                    value = str(results[key]["value"])
-                    values.append(value)
-
-                writer = csv.writer(outfile)
-
-                writer.writerow(header)
-                writer.writerow(values)
-
-        elif ftype.upper() == "JSON":
-            if fname is None:
-                fname = "output.json"
-
-            with open(fname, "w") as outfile:
-                json.dump(results, outfile) 
-        else:
-            raise ValueError("Not supported export type. Try:\n") # add list of types
-        
-        # print
-        print("saved to '%s'"%(fname))
-    
-    def get(self):
-        return self.widgets.entries["save"].get()
-
-
-
-class ResultOutput(tk.Frame):
-    def __init__(self, key, value=None, unit=None, master=None, cnf=None, *args, latex=True, **kwargs):
-        super().__init__(master, cnf, *args, **kwargs)
-
-        # create widgets
-        self.widgets = Widgets()
-
-        # create button/label of property name to display
-        btn_kwargs = kwargs.get("btn_kwargs", {})
-        if latex is True:
-            key = self.convert_to_latex(key)
-        btn_kwargs.setdefault("text", key)
-        # define later to call new window with settings
-        btn_kwargs.setdefault("command", None)
-        btn = tk.Button(self, cnf, **btn_kwargs)
-
-        # create label of value
-        value_lbl_kwargs = kwargs.get("value_lbl_kwargs", {})
-        value_lbl_kwargs.setdefault("text", value)
-        value_lbl_kwargs.setdefault("bg", "white")
-        value_lbl = tk.Label(self, cnf, **value_lbl_kwargs)
-
-        # create unit label
-        unit_lbl_kwargs = kwargs.get("unit_lbl_kwargs", {})
-        unit_lbl_kwargs.setdefault("text", unit)
-        unit_lbl = tk.Label(self, cnf, **unit_lbl_kwargs)
-
-        # pack away!
-        btn.grid(row=0, column=0, sticky="NSWE")
-        value_lbl.grid(row=0, column=1, sticky="NSWE")
-        unit_lbl.grid(row=0, column=2, sticky="NSWE")
-
-        # save to self
-        self.widgets.buttons["key"] = btn
-        self.widgets.labels["value"] = value_lbl
-        self.widgets.labels["unit"] = unit_lbl
-
-        # configure columns same size
-        self.columnconfigure(0, weight=2, uniform="fred")
-        self.columnconfigure(1, weight=2, uniform="fred")
-        self.columnconfigure(2, weight=1, uniform="fred")
-
-    def update_text(self, text):
-        self.widgets.labels["value"].config(text=text)
-
-    def updata_value_label(self, key, value):
-        kwargs = {key: value}
-        self.widgets.labels["value"].config(**kwargs)
-
-    def convert_to_latex(self, input_string: str):
-
-        input_string = input_string.replace("lambda", "\u03BB")
-        #input_string = input_string.replace("sheath", "r_p/\u03BB_De")
-
-        split_string = input_string.split("_")
-        if len(split_string) > 1:
-            text = []
-            for k, string in enumerate(split_string):
-                if k == 0:
-                    text.append(string)
-                else:
-                    text.append(string)
-            text = "".join(text)
-        else:
-            text = split_string[0]
-
-        return text
-
-
-class CombinedDataFrame(tk.Frame):
-    def __init__(self, Solver, Canvas, Panel, 
-                 master=None, cnf=None, *args, **kwargs):
-        # get kwargs for individual
-        canvas_kwargs = kwargs.pop("canvas_kwargs", {})
-        panel_kwargs = kwargs.pop("panel_kwargs", {})
-        solver_kwargs = kwargs.pop("solver_kwargs", {})
-        super().__init__(master, cnf=cnf, *args, **kwargs)
-
-        # set defaults for canvas
-        canvas_kwargs.setdefault("width", 5)
-        canvas_kwargs.setdefault("height", 4)
-
-        # set defaults for panel
-
-        # make plotting canvas
-        self._canvas = Canvas(  # LinearSemilogyDoubleCanvasSingleProbeLangmuir(
-            self, cnf, **canvas_kwargs)
-
-        # make control panel
-        self._panel = Panel(  # SingleProbeLangmuirResultsFrame(
-            self, cnf, **panel_kwargs)
-
-        # make solver
-        self._solver = Solver(**solver_kwargs)
-
-        # pack Away!!
-        self.canvas.grid(row=0, column=1, sticky="NSWE")
-        self.panel.grid(row=0, column=0, sticky="NWE")
-
-    @property
-    def canvas(self):
-        return self._canvas
-
-    @property
-    def panel(self):
-        return self._panel
-
-    @property
-    def solver(self):
-        return self._solver
-
-
-class LinearSemilogySingleLangmuirCombinedData(CombinedDataFrame):
-    def __init__(self, plasma, probe, data: pd.DataFrame, master=None, cnf={}, *args, **kwargs):
-        Canvas = LinearSemilogyDoubleCanvasSingleProbeLangmuir
-        Panel = SingleProbeLangmuirResultsFrame
-        Solver = SingleLangmuirProbeSolver
-        kwargs.setdefault("solver_kwargs",{})
-        kwargs["solver_kwargs"].update({'Plasma':plasma,'Probe':probe,'Data':data})
-        super().__init__(Solver, Canvas, Panel, master, cnf=cnf, *args, **kwargs)
-        # can call self.canvas, self.panel, self.property
-
-        # solve Trace
-        self.solve()
-
-        # make save and exit button
-        btn_save_n_close = tk.Button(self,cnf=cnf,command=self.save_n_close,text="Save and Close")
-        # make exit button
-        btn_close = tk.Button(self,cnf=cnf,command=self.close,text="Close")
-
-        # pack away!
-        btn_save_n_close.grid(row=2,column=0,columnspan=2,sticky="NSWE")
-        btn_close.grid(row=3,column=0,columnspan=2,sticky="NSWE")
-
-        # store
-        self.widgets = Widgets()
-        self.widgets.buttons["save_n_close"] = btn_save_n_close
-        self.widgets.buttons["close"] = btn_close
-    
-    def solve(self):
-        # pre process data
-        self.solver.preprocess()
-
-        # solve for data
-        self.solver.find_plasma_properties()
-
-        # make plots of solved for plasma parameters
-        self.canvas.make_plot(self.solver)
-
-        # pass data to results panel
-        self.panel.results = self.solver.results
-
-    def save_n_close(self):
-        self.panel.save()
-        self.canvas.save()
-        self.close()
-
-    def close(self):
-        self.destroy()
-
-
-class MultipleDataFrame(tk.Frame):
-    def __init__(self, num, DataFrame, master=None, cnf={}, *args, **kwargs):
-        super().__init__(master, cnf=cnf, *args, **kwargs)
-
-        self._pages = [None]*num
-
-    def create_pages(self, num, DataFrame, *args, **kwargs):
-        for k in range(num):
-            self.pages[k] = DataFrame(*args, **kwargs)
-
-    @property
-    def pages(self):
-        return self._pages
-
-    def show_page(self, n):
-        n -= 1
-
-        self.pages[n].tkraise()

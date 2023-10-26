@@ -1,14 +1,17 @@
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Dict
+from typing import Dict, Callable, Any
 import json
+import pprint
 
 import numpy as np
 import pandas as pd
 
 from pstl.utls.abc import PSTLObject
+from pstl.utls.json import load_build_and_get_parameters
 from pstl.utls.plasmas import Plasma
 from pstl.utls.plasmas import setup as plasma_setup
 from pstl.utls.data import setup as data_setup
+from pstl.utls.objects import setup as object_setup
 from pstl.diagnostics.probes.langmuir.single import setup as probe_setup
 from pstl.diagnostics.probes import Probe
 
@@ -31,14 +34,14 @@ get_lambda_D = add_empty_dict(absorb_extra_args_kwargs(lambda_D))
 get_sheath_type = add_empty_dict(absorb_extra_args_kwargs(get_sheath_type))
 
 # maybe a concrete class called ProbeData that would jsut be raw_data, deleted_data, filtered_data, smoothed_data
-singe_langmuir_probe_solver_setup_funcs = {
+singe_langmuir_probe_solver_setup_builders = {
     "plasma"    :   plasma_setup,
     "probe"     :   probe_setup,
     "data"      :   data_setup,
 }
 
 
-def setup(settings):
+def setup(settings, *args, **kwargs):
     """
     Creates and returns a SingleProbeLangmuirSolver object based on settings dictionary passed in.
     The settings parameter must have keys 'plasma', 'probe', and 'data', where in
@@ -47,7 +50,7 @@ def setup(settings):
     the 'file_load' case, the entry is a string that is the file path to load a json file
     that has all the needed properties to make the object.
     
-    Keys:
+    Keys (mandatory):
         'plasma': dict[dict | str]   ->  Plasma object defining properties or path to json file 
         'probe' : dict[dict | str]   ->  Probe object defining properties or path to json file
         'data'  : dict[dict | str]   ->  Data object defining properties or path to json file
@@ -58,52 +61,16 @@ def setup(settings):
         'kwargs'        : dict  ->  addional keyword arguments
     Returns: Solver Object
     """
-    def load_json(file,*args, **kwargs):
-        with open(file) as f:
-            json_data = json.load(f)
-        return json_data
-    def define_or_load(key, setup):
-        define = "define"
-        file_load = "file_load"
-        out = None
-        if key in settings:
-            what2do = settings[key]
-            if define in what2do:
-                out = setup(what2do[define])
-            elif file_load in what2do:
-                try:
-                    out = load_json(what2do[file_load])
-                except FileNotFoundError as error:
-                    raise error
-                except:
-                    raise Exception("Something else went wrong loading file '%s"%(what2do[file_load]))
-        else:
-            raise ValueError("'%s' is not a proper key. Only '%s' and '%s' are accepted"%(key,define,file_load))
-        return out
-    
-    objects = {"plasma":Plasma,
-                "probe":Probe,
-                "data":pd.DataFrame}
+    # create new object with parameters (arguments)
+    output_object: SingleLangmuirProbeSolver = object_setup(
+        *args,
+        settings=settings,
+        builders=singe_langmuir_probe_solver_setup_builders,
+        Builder=SingleLangmuirProbeSolver,
+        **kwargs,
+    )
 
-    # get plasma, probe, and data objects for solver
-    for k, obj in enumerate(objects):
-        objects[obj] = define_or_load(
-            obj,
-            singe_langmuir_probe_solver_setup_funcs[obj]
-            )
-        
-    # get solver other settings
-    name = settings.get("name",None)
-    description = settings.get("name",None)
-    args = settings.get("args", (None))
-    kwargs = settings.get("kwargs",{})
-    # get solver
-    solver = SingleLangmuirProbeSolver(
-        objects["plasma"],
-        objects["probe"],
-        objects["data"],
-        *args,name=name, description=description,**kwargs)
-    return solver
+    return output_object
 
 
 class DiagnosticData(PSTLObject):
@@ -225,6 +192,11 @@ class PlasmaProbeSolver(DiagnosticData, ABC):
         # set defeult methods (abstract)
         self._methods = self.set_default_methods(methods)
 
+        # set defeult methods (abstract)
+        self._methods_args = self.set_default_methods_args(kwargs)
+        
+        # set defeult methods (abstract)
+        self._methods_kwargs = self.set_default_methods_kwargs(kwargs)
     @property
     def plasma(self):
         return self._plasma
@@ -253,13 +225,33 @@ class PlasmaProbeSolver(DiagnosticData, ABC):
     def methods(self):
         return self._methods
 
+    @property
+    def methods_args(self):
+        return self._methods_args
+    
+    @property
+    def methods_kwargs(self):
+        return self._methods_kwargs
+
     @abstractmethod
-    def set_default_methods(self, methods: Dict) -> Dict:
+    def set_default_methods(self, methods: dict) -> dict:
         pass
         # return {}
 
     @abstractmethod
-    def set_available_plasma_properties(self, properties: Dict) -> Dict:
+    def set_default_methods_args(self, methods: dict) -> tuple:
+        pass
+
+    @abstractmethod
+    def set_default_methods_kwargs(self, methods: dict) -> dict:
+        pass
+
+    @abstractmethod
+    def set_available_plasma_properties(self, properties: dict) -> dict:
+        pass
+
+    @abstractmethod
+    def solve(self, *args, methods: dict={}, **kwargs):
         pass
 
 
@@ -278,14 +270,15 @@ class PlasmaLangmuirProbeSolver(PlasmaProbeSolver):
 
 
 class SingleLangmuirProbeSolver(PlasmaLangmuirProbeSolver):
-    def __init__(self, Plasma: Plasma, Probe: SingleProbeLangmuir, Data: pd.DataFrame,
+    def __init__(self, plasma: Plasma, probe: SingleProbeLangmuir, data: pd.DataFrame,
                  methods: Dict = {}, properties: Dict = {},
                  *args, **kwargs) -> None:
-        super().__init__(Plasma, Probe, Data,
+        super().__init__(plasma, probe, data,
                          methods=methods, properties=properties,
                          *args, **kwargs)
 
-    def set_available_plasma_properties(self, properties: Dict) -> Dict:
+
+    def set_available_plasma_properties(self, properties: dict) -> dict:
         super().set_available_plasma_properties(properties)
         available_plasma_properties = {
             "V_f": {'value': None, 'other': None},
@@ -306,22 +299,21 @@ class SingleLangmuirProbeSolver(PlasmaLangmuirProbeSolver):
         # methods = super().setdefault_methods(methods)
         super().set_default_methods(methods)
         default_methods = {
-            "V_f": 0,
-            "V_s": 0,
-            "I_is": 0,
-            "n_i": 0,
-            "I_es": 0,
-            "KT_e": 0,
-            "n_e": 0,
-            "J_es": 0,
-            "J_is": 0,
-            "lambda_De": 0,
-            "sheath": 0,
+            "algorithm" : 0,
         }
         default_methods.update(methods)
         return default_methods
+    
+    def set_default_methods_args(self, kwargs: dict) -> dict:
+        super().set_default_methods_args(kwargs)
+        return kwargs.pop("algorithm_args",())
+    
+    def set_default_methods_kwargs(self, kwargs: dict) -> dict:
+        super().set_default_methods_kwargs(kwargs)
+        return kwargs.pop("algorithm_kwargs",{})
 
-    def find_plasma_properties(self, algo=0, methods={}, *args, **kwargs):
+    def solve(self, *args,methods={}, **kwargs):
+        super().solve(methods,*args,**kwargs)
         # algo is the default algo to use i.e. topham, lobia, etc.
         # verify methods is a dictionary
         # methods should not be modified unless you want to modify which methods are being used during the alogrythm.
@@ -333,164 +325,34 @@ class SingleLangmuirProbeSolver(PlasmaLangmuirProbeSolver):
         methods_to_use = dict(self.methods)
         methods_to_use.update(methods)
 
-        # loop through plasma properties to get and perform each in given order
-        # HARD CODEDIN
-        func = method_selector(algo, available_algorithms,
-                               available_algorithm_functions)
-        data, results = func(   
+        # grab algorithm args and kwargs from kwargs
+        new_algorithm_args = kwargs.get("algorithm_args",tuple())
+        new_algorithm_kwargs = kwargs.get("algorithm_kwargs",{})
+        
+
+        # update defaults with new
+        algorithm_args = new_algorithm_args
+        algorithm_kwargs = self.methods_kwargs | new_algorithm_kwargs
+
+        # Choose which alogrithm to solve for results
+        algorithm_func = method_selector(methods_to_use["algorithm"], 
+                               available_algorithms,
+                               available_algorithm_functions,
+        )
+
+        # run selected algorithm
+        data, results = algorithm_func(   
             self.data.voltage, self.data.current,   # type: ignore
             self.probe.shape, self.probe.radius, self.probe.area,
-            self.plasma.m_i, m_e=self.plasma.m_e,
+            self.plasma.m_i, 
+            *algorithm_args,
+            m_e=self.plasma.m_e,
+            **algorithm_kwargs,
         )
+
+        # save results and data to solver object
         self._results = results
         self._data = data
-
-    def find_plasma_property(self, key, method=None, **kwargs):
-        # choose which property
-        if key == "V_f":
-            func = get_floating_potential
-            kwargs.setdefault("voltage", self.data.iloc[:, 0])  # type: ignore
-            kwargs.setdefault("current", self.data.iloc[:, 1])  # type: ignore
-        elif key == "V_s":
-            func = get_plasma_potential
-            kwargs.setdefault("voltage", self.data.iloc[:, 0])  # type: ignore
-            kwargs.setdefault(
-                "current", self.data_e.iloc[:, 1])  # type: ignore
-            elec_ret_poly = self.results["KT_e"]["other"]["fit"].poly.convert(
-            ) if "fit" in self.results["KT_e"]["other"] else None
-            elec_sat_poly = self.results["I_es"]["other"]["fit"].poly.convert(
-            ) if "fit" in self.results["I_es"]["other"] else None
-            kwargs.setdefault("elec_ret_poly", elec_ret_poly)
-            kwargs.setdefault("elec_sat_poly", elec_sat_poly)
-        elif key == "I_is":
-            func = get_ion_saturation_current
-            kwargs.setdefault("voltage", self.data.iloc[:, 0])  # type: ignore
-            kwargs.setdefault("current", self.data.iloc[:, 1])  # type: ignore
-        elif key == "n_i":
-            func = get_ion_density
-            kwargs.setdefault("voltage", self.data.iloc[:, 0])  # type: ignore
-            kwargs.setdefault("current", self.data.iloc[:, 1])  # type: ignore
-            kwargs.setdefault("area", self.probe.area)
-            kwargs.setdefault("KT_e", self.results["KT_e"]["value"])
-            kwargs.setdefault("I_is", self.results["I_is"]["value"])
-            kwargs.setdefault("m_i", self.plasma.m_i)
-            kwargs.setdefault("m_e", self.plasma.m_e)
-        elif key == "I_es":
-            func = get_electron_saturation_current
-            kwargs.setdefault("voltage", self.data.iloc[:, 0])  # type: ignore
-            kwargs.setdefault(
-                "current", self.data_e.iloc[:, 1])  # type: ignore
-        elif key == "KT_e":
-            func = get_electron_temperature
-            kwargs.setdefault("voltage", self.data.iloc[:, 0])  # type: ignore
-            kwargs.setdefault(
-                "current", self.data_e.iloc[:, 1])  # type: ignore
-            kwargs.setdefault("V_f", self.results["V_f"]["value"])
-            kwargs.setdefault("V_s", self.results["V_s"]["value"])
-        elif key == "n_e":
-            func = get_electron_density
-            kwargs.setdefault("voltage", self.data.iloc[:, 0])  # type: ignore
-            kwargs.setdefault(
-                "current", self.data_e.iloc[:, 1])  # type: ignore
-            kwargs.setdefault("area", self.probe.area)
-            kwargs.setdefault("KT_e", self.results["KT_e"]["value"])
-            kwargs.setdefault("I_es", self.results["I_es"]["value"])
-            kwargs.setdefault("m_e", self.plasma.m_e)
-        elif key == "J_es":
-            func = get_electron_saturation_current_density
-            kwargs.setdefault("voltage", self.data.iloc[:, 0])  # type: ignore
-            kwargs.setdefault(
-                "current", self.data_e.iloc[:, 1])  # type: ignore
-            kwargs.setdefault("area", self.probe.area)
-            kwargs.setdefault("I_es", self.results["I_es"]["value"])
-        elif key == "J_is":
-            func = get_ion_saturation_current_density
-            kwargs.setdefault("voltage", self.data.iloc[:, 0])  # type: ignore
-            kwargs.setdefault("current", self.data.iloc[:, 1])  # type: ignore
-            kwargs.setdefault("area", self.probe.area)
-            kwargs.setdefault("I_is", self.results["I_is"]["value"])
-        elif key == "lambda_De":
-            func = get_lambda_D
-            kwargs.setdefault("area", self.probe.area)
-            kwargs.setdefault("KT_e", self.results["KT_e"]["value"])
-            kwargs.setdefault("n", self.results["n_e"]["value"])
-        elif key == "sheath":
-            func = get_sheath_type
-            kwargs.setdefault("lambda_D", self.results["lambda_De"]["value"])
-            kwargs.setdefault("radius_probe", self.probe.diameter/2)
-        else:
-            table = "\n".join(
-                [f"{k}\t{v}" for k, v in enumerate(self.results)])
-            raise ValueError(
-                f"Matching key not found: {key}\nChoose from one of the available options:\n{table}")
-
-        # check for set method
-        if method is None:
-            method = self.methods[key]
-
-        # solve and return a tuple
-        kwargs.setdefault("method", method)
-        value, other = func(**kwargs)
-
-        # store values and other returns
-        self.results[key]['value'] = value
-        self.results[key]['other'] = other
-
-    def find_floating_potential(self, method=None, **kwargs):
-        # key for method and saving indexing
-        key = 'V_f'
-        self.find_plasma_property(key, method, **kwargs)
-
-    def find_plasma_potential(self, method=None, **kwargs):
-        # key for method and saving indexing
-        key = 'V_s'
-        self.find_plasma_property(key, method, **kwargs)
-
-    def find_ion_saturation_current(self, method=None, **kwargs):
-        # key for method and saving indexing
-        key = 'I_is'
-        self.find_plasma_property(key, method, **kwargs)
-
-    def find_ion_density(self, method=None, **kwargs):
-        # key for method and saving indexing
-        key = 'n_i'
-        self.find_plasma_property(key, method, **kwargs)
-
-    def find_electron_saturation_current(self, method=None, **kwargs):
-        # key for method and saving indexing
-        key = 'I_es'
-        self.find_plasma_property(key, method, **kwargs)
-
-    def find_electron_density(self, method=None, **kwargs):
-        # key for method and saving indexing
-        key = 'n_e'
-        self.find_plasma_property(key, method, **kwargs)
-
-    def find_electron_temperature(self, method=None, **kwargs):
-        # key for method and saving indexing
-        key = 'KT_e'
-        self.find_plasma_property(key, method, **kwargs)
-
-    def find_electron_saturation_current_density(self, method=None, **kwargs):
-        # key for method and saving indexing
-        key = 'J_es'
-        self.find_plasma_property(key, method, **kwargs)
-
-    def find_ion_saturation_current_density(self, method=None, **kwargs):
-        # key for method and saving indexing
-        key = 'J_is'
-        self.find_plasma_property(key, method, **kwargs)
-
-    def find_electron_debye_length(self, method=None, **kwargs):
-        # key for method and saving indexing
-        key = 'lambda_De'
-        self.find_plasma_property(key, method, **kwargs)
-
-    def find_sheath_type(self, method=None, **kwargs):
-        # key for method and saving indexing
-        key = 'sheath'
-        self.find_plasma_property(key, method, **kwargs)
-
 
 # Declare available methods
 available_algorithms = {
