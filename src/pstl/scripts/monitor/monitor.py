@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
 import datetime as dt
-from pstl.instruments.daq.agilent.gpib import Agilent34970A as DAQ
+from pstl.instruments.daq.agilent.models import Agilent34970A as DAQ
 
 class ALARM():
     def __init__(self,upper=130,lower=105):
