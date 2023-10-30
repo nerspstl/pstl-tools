@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pstl-tools"
-version = "0.1.2"
+version = "v2023.10.0dev0"
 description = "Python scripts for making working with UMICH NERS PSTL Lab Equipment much easier"
 readme = "README.md"
 authors = [{ name = "tyjoto", email = "tyjoto@gmail.com" }]
@@ -41,8 +41,8 @@ gui_langmuir = "pstl.scripts.test.test_gui_langmuir:main"
 rc_bakeout = "pstl.scripts.monitor.main_daq.py:main"
 
 [tool.bumpver]
-current_version = "0.1.2"
-version_pattern = "MAJOR.MINOR.PATCH"
+current_version = "v2023.10.0dev0"
+version_pattern = "vYYYY.0M.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
 tag = true
@@ -53,6 +53,5 @@ push = true
 "src/pstl/__init__.py" = ["{version}"]
 "README.md" = [
     "{version}",
-    "{pep440_version}",
 ]
 

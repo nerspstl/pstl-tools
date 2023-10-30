@@ -1,6 +1,9 @@
 # pstl-tools
 Python scripts for making working with UMICH NERS PSTL Lab Equipment much easier
 
+## Current Version
+v2023.10.0dev0
+
 ## Tested Python Versions
 - v3.10
 
