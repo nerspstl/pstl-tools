@@ -1,15 +1,18 @@
 import numpy as np
 import numpy.typing as npt
 
+from pstl.utls.helpers import ideal_gas_law_pressure_to_density
+
 class Xenon():
     def __init__(
             self, 
             E:int | float, n: int | float, z: int | float, js:npt.ArrayLike, *args, 
+            Tgas: int | float = 300, pressure: bool = False,
             **kwargs):
         """
         This class solves for correction factors and the curent densities at thruster exit plane using
         E: energy of ions in eV
-        n: background neutral density in m^-3 (current version assumes uniform constant density)
+        n: background neutral density in m^-3 (current version assumes uniform constant density) if pressure is True, then it is assumed n to be given as pressure in Torr
         z: is disntance downstream of thruster exit plane in m
         js: is an arraylike of current densities of single, double, [triple] given in arbitry units
         Attributes:
@@ -22,13 +25,19 @@ class Xenon():
         Rohit Shastry, Richard R. Hofer, Bryan M. Reid, Alec D. Gallimore; Method for analyzing ExB probe spectra from Hall thruster plumes. Rev. Sci. Instrum. 1 June 2009; 80 (6): 063502. https://doi.org/10.1063/1.3152218
         """
         self.z = z
-        self.n = n
+        if pressure is True:
+            n = ideal_gas_law_pressure_to_density(n,T_gas=Tgas)
+            self.n = n
+        elif pressure is False:
+            self.n = n
         self.E = E
 
         self.js = self._organize_js(js)
         self.sigmas = self.calc_sigmas(E)
         self.cfs = self.calc_correction_factors(n, z)
         self.j0s = self.correct_current_densitites(self.js)
+
+
     def _organize_js(self,js):
         js_new = {}
         if isinstance(js, dict):
@@ -51,18 +60,18 @@ class Xenon():
 
     def calc_sigma1(self, E):
         # Where E is beam ion energy in eV
-        return 87.3-13.6*np.log(E)
+        return (87.3-13.6*np.log10(E))*1e-20
     def calc_sigma2(self, E):
         # Where E is beam ion energy in eV
-        return 45.7-8.9*np.log(E)
+        return (45.7-8.9*np.log10(E))*1e-20
     def calc_sigma3(self):
-        return 2
+        return 2*1e-20
     def calc_sigma4(self, E):
         # Where E is beam ion energy in eV
         return self.calc_sigma1(E)
     def calc_sigma5(self, E):
         # Where E is beam ion energy in eV
-        return 16.9-3*np.log(E)
+        return (16.9-3*np.log10(E))*1e-20
         
     def calc_j1_j10(self,n,z):
         # n: density

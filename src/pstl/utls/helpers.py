@@ -10,6 +10,7 @@ from scipy.signal import savgol_filter, find_peaks
 from scipy.interpolate import interp1d
 import pandas as pd
 
+from pstl.utls import constants as c
 from pstl.utls.errors import FitConvergenceError, MissingReturnError
 from pstl.utls.verify import verify_iterables, verify_1D_array, verify_type
 
@@ -818,3 +819,18 @@ def _fit_polynomial_func(x, *args):
         )
 
     return total
+
+
+def ideal_gas_law_pressure_to_density(P_gas, T_gas: int | float = 300):
+    """
+    Returns neutral gas density [Torr]
+
+    Parameters:
+    P_gas [Torr]
+    T_gas (optional=300) [K]
+    """
+
+    P = P_gas
+    P = P*101325/760            # unit: J/m^3 <- [Torr]*[101325 Pa/760 Torr]*[1 J/m^3/1 Pa] NOTE: 1 atm = 101325 Pa = 760 Torr
+    N = P/(c.K_B*T_gas )        # unit: m^-3 <- [J/m^3]/([J/K]*[K])
+    return N                    # unit: m^-3
