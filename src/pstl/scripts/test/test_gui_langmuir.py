@@ -6,6 +6,7 @@ import traceback
 import numpy as np
 import pandas as pd
 from matplotlib import style
+from PIL import Image, ImageTk
 
 from pstl.gui.langmuir.canvas import LinearSemilogyCanvas, LinearSemilogyDoubleCanvas, LinearSemilogyDoubleCanvasSingleProbeLangmuir
 from pstl.gui.langmuir import LinearSemilogyDoubleCanvasSingleProbeLangmuir as Canvas
@@ -23,6 +24,8 @@ from pstl.utls.errors.plasmas import FailedPlasmaClassBuild
 from pstl.utls.errors.langmuir import Flagged
 
 from pstl.utls.data import setup as data_setup
+
+from pstl.extras.images import pstl_png_path, pstl_ico_path, pstl_16_ico_path, pstl_32_ico_path
 
 from pstl.diagnostics.probes.langmuir.single import SphericalSingleProbeLangmuir as SSPL
 from pstl.diagnostics.probes.langmuir.single import CylindericalSingleProbeLangmuir as CSPL
@@ -250,6 +253,13 @@ def gui_langmuir(settings:dict):
     # initiate app
     app = tk.Tk()
     app.title("PSTL GUI Langmuir")
+    #pstl_png = tk.PhotoImage(file=pstl_png_path)
+    app.iconphoto(
+        True, 
+        ImageTk.PhotoImage(Image.open(pstl_32_ico_path)),
+        ImageTk.PhotoImage(Image.open(pstl_16_ico_path))
+    )
+    #app.iconbitmap(pstl_ico_path)
     try: 
         page = LSSLCD2_setup(settings, master=app)
         # pack it on
@@ -320,6 +330,12 @@ def main():
     # initiate app
     app = tk.Tk()
     app.title("PSTL GUI Langmuir")
+    #pstl_png = tk.PhotoImage(file=pstl_png_path)
+    app.iconphoto(
+        True, 
+        ImageTk.PhotoImage(Image.open(pstl_32_ico_path)),
+        ImageTk.PhotoImage(Image.open(pstl_16_ico_path))
+    )
     
     # load settings
     if args.settings_file is None:

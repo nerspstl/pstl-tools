@@ -21,7 +21,7 @@ def main():
     #label=tk.Label(root,image=tkimage)
 
     #label.pack()
-    root.iconphoto(False,img_32, img_16)
+    root.iconphoto(False,tkimage_32, img_16)
     root.mainloop()
 
 if __name__ == "__main__":
