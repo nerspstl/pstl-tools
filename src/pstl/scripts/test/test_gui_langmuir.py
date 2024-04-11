@@ -54,6 +54,7 @@ parser.add_argument('-G','--neutral_gas_settings_file', help="location of neutra
 parser.add_argument('-P','--probe_settings_file', help="location of probe defining json file",type=str)
 parser.add_argument('-D','--data_settings_file', help="location of data defining json file",type=str)
 parser.add_argument('-L', '--solver_settings_file', help="location of solver settings json file",type=str)
+
 parser.add_argument('-S', '--settings_file', help="location of whole gui settings json file",type=str)
 args = parser.parse_args()
 
@@ -253,13 +254,13 @@ def gui_langmuir(settings:dict):
     # initiate app
     app = tk.Tk()
     app.title("PSTL GUI Langmuir")
-    #pstl_png = tk.PhotoImage(file=pstl_png_path)
     app.iconphoto(
         True, 
         ImageTk.PhotoImage(Image.open(pstl_32_ico_path)),
         ImageTk.PhotoImage(Image.open(pstl_16_ico_path))
     )
-    #app.iconbitmap(pstl_ico_path)
+    
+    # Try to run the solver
     try: 
         page = LSSLCD2_setup(settings, master=app)
         # pack it on
@@ -271,16 +272,13 @@ def gui_langmuir(settings:dict):
         traceback.print_exc()
         #with open("/home/tyjoto/janus/temp/fail.tab") as f:
         #    f.write(file+"\n")
-
         pass
-
     except:
         file = settings["name"]+".tab"
         print("\nFAILED in gui_langmuir: ",file,"\n")
         traceback.print_exc()
         #with open("/home/tyjoto/janus/temp/fail.tab") as f:
         #    f.write(file+"\n")
-
         pass
     else:
         def save_n_close():
@@ -289,15 +287,9 @@ def gui_langmuir(settings:dict):
         # save and close
         btn_savenclose = tk.Button(app,text="Save and Close app", command=save_n_close)
         btn_savenclose.pack()
-
-
-
-    
     finally:
         def raise_flagged():
             raise Flagged
-
-
         # close button
         btn = tk.Button(app,text="Close App",command=app.destroy)
         btn.pack()
@@ -305,7 +297,6 @@ def gui_langmuir(settings:dict):
         # flag button
         btn_flag = tk.Button(app,text="Flag",command=raise_flagged)
         btn_flag.pack()
-
         try:
             # run loop
             app.mainloop()
@@ -327,15 +318,6 @@ def main():
         if args.data_settings_file is None and args.fname is None:
             raise ValueError("either data_settings_file or fname must be defined")
 
-    # initiate app
-    app = tk.Tk()
-    app.title("PSTL GUI Langmuir")
-    #pstl_png = tk.PhotoImage(file=pstl_png_path)
-    app.iconphoto(
-        True, 
-        ImageTk.PhotoImage(Image.open(pstl_32_ico_path)),
-        ImageTk.PhotoImage(Image.open(pstl_16_ico_path))
-    )
     
     # load settings
     if args.settings_file is None:
@@ -386,51 +368,60 @@ def main():
             # create page
             # create combined langmuir frame that sits on one page
             print(solver_args,"\n",settings)
-            page = LSSLCD(**solver_args,master=app,**settings)
+            #page = LSSLCD(**solver_args,master=app,**settings)
         else:
             with open(args.solver_settings_file) as f:
                 solver_settings = json.load(f)
             solver = data_setup(solver_settings)
             settings["solver"] = solver
-            page = LSSLCD2_setup(settings, master=app)
+            #page = LSSLCD2_setup(settings, master=app)
 
     else:
+        print("All settings present")
         with open(args.settings_file) as f: 
             settings = json.load(f)
-        try:
-            page = LSSLCD2_setup(settings, master=app)
-        except:
-            traceback.print_exc()
-            file = settings["name"]+".tab"
-            print("\nFAILED: ",file,"\n")
-            #with open("/home/tyjoto/janus/temp/fail.tab") as f:
-            #    f.write(file+"\n")
+    gui_langmuir(settings)
 
-            pass
-        else:
-            def save_n_close():
-                page.save_n_close()
-                app.destroy()
-            # save and close
-            btn_savenclose = tk.Button(app,text="Save and Close app", command=save_n_close)
-            btn_savenclose.pack()
+def olde_main(settings, app):
+    # initiate app
+    app = tk.Tk()
+    app.title("PSTL GUI Langmuir")
+    #pstl_png = tk.PhotoImage(file=pstl_png_path)
+    app.iconphoto(
+        True, 
+        ImageTk.PhotoImage(Image.open(pstl_32_ico_path)),
+        ImageTk.PhotoImage(Image.open(pstl_16_ico_path))
+    )
 
+    # Indented 1
+    try:
+        page = LSSLCD2_setup(settings, master=app)
+    except:
+        traceback.print_exc()
+        file = settings["name"]+".tab"
+        print("\nFAILED: ",file,"\n")
+        #with open("/home/tyjoto/janus/temp/fail.tab") as f:
+        #    f.write(file+"\n")
 
+        pass
+    else:
+        def save_n_close():
+            page.save_n_close()
+            app.destroy()
+        # save and close
+        btn_savenclose = tk.Button(app,text="Save and Close app", command=save_n_close)
+        btn_savenclose.pack()
+    finally:
+        # close button
+        btn = tk.Button(app,text="Close App",command=app.destroy)
+        btn.pack()
 
-        
-        finally:
+        # flag button
+        btn_flag = tk.Button(app,text="Flag",command=lambda: print(repr("Flagged: {0}".format(str(settings.get("name","Unknown"))))))
+        btn_flag.pack()
 
-
-            # close button
-            btn = tk.Button(app,text="Close App",command=app.destroy)
-            btn.pack()
-
-            # flag button
-            btn_flag = tk.Button(app,text="Flag",command=lambda: print(repr("Flagged: {0}".format(str(settings.get("name","Unknown"))))))
-            btn_flag.pack()
-
-            # run loop
-            app.mainloop()
+        # run loop
+        app.mainloop()
 
 
 

@@ -1,6 +1,6 @@
 {
     "name"      :   "Test NSTAR BLP IV Trace",
-    "file"      :   "/home/tyjoto/github-work/pstl-tools/tests/langmuir/lang_data.csv",
+    "file"      :   "tests/gui_langmuir/database/lang_data-01-no_header.csv",
     "file_type" :   ".csv",
     "negative"  :   true,
     "args"      :   [],

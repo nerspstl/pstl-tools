@@ -1,5 +1,0 @@
-{
-    "plasma"    :   "PlasmaObject",
-    "probe"     :   "ProbeObject",
-    "data"      :   "PandasDataObject"
-}

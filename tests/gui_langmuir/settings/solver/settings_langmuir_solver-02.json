@@ -1,0 +1,39 @@
+{
+    "name"          :   "Langmuir Solver",
+    "description"   :   "solves an IV Langmuir trace",
+    "plasma"    :   {"BUILD_FROM_FILE"    :   "tests/gui_langmuir/settings/solver/plasma/settings_xenon.json"},
+    "probe"     :   {"BUILD_FROM_FILE"    :   "tests/gui_langmuir/settings/solver/probe/settings_BLP.json"},
+    "data"      :   {"BUILD_FROM_FILE"    :   "tests/gui_langmuir/settings/solver/data/settings_lang_data-02.json"},
+    "methods"   :   {"algorithm"    :   "topham"},
+    "properties":   {},
+    "algorithm_args"    :   [],
+    "algorithm_kwargs"  :   {
+        "floating_potential_kwargs"    :   {"interpolate"   :   "linear"},
+        "plasma_potential_kwargs"      :   {},
+        "electron_temperature_kwargs"  :   {
+            "fit_kwargs"    :   {
+
+            }
+        },
+        "electron_density_kwargs"      :   {},
+        "electron_saturation_current_kwargs"   :   {
+            "fit_kwargs"    :   {
+                "fitmax"    :   null,
+                "bitmax"    :   null,
+                "istart"    :   null,
+                "iend"      :   null,
+                "printlog" :   false
+            }
+        },
+        "electron_saturation_current_density_kwargs"   :   {},
+        "ion_density_kwargs"      :   {},
+        "ion_saturation_current_kwargs"   :   {},
+        "ion_saturation_current_density_kwargs"   :   {},
+        "electron_debye_length_kwargs" :   {},
+        "r_p/lambda_De_kwargs"     :   {},
+        "sheath_kwargs"            :   {},
+        "I_i_thin_kwargs"          :   {},
+        "I_i_transitional_kwargs"  :   {},
+        "I_i_thick_kwargs"         :   {}
+    }
+}
