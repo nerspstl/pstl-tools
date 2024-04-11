@@ -1,0 +1,91 @@
+{
+    "name"              :   "TEST_LANGMUIR-Hardcode_Template",
+    "canvas_kwargs"     : 
+        {
+            "saveas"    :   "tests/gui_langmuir/outputs/output_plot.png",
+            "stype"     :   "png",
+            "width"     :   4,
+            "height"    :   3
+        },
+    "panel_kwargs"      :   
+        {
+            "displays_kwargs"  :
+                {
+                    "fname" :   "tests/gui_langmuir/outputs/output_results.csv",
+                    "ftype" :   "csv"
+                },
+            "controls_kwargs"  :   {}
+        },
+    "solver"            :   {   "BUILD" :  
+        {
+            "name"          :   "Langmuir Solver",
+            "description"   :   "solves an IV Langmuir trace",
+            "plasma"        :   {   "BUILD" :
+                {
+                    "name"          :   "Rocket Chamber Background Gas (Xenon)",
+                    "description"   :   "Xenon gas",
+                    "neutral_gas"   :   "xenon",
+                    "masses"        :   {"m_i":null,"m_e":null},
+                    "amu"           :   true
+                }
+            },
+            "probe"     :   {   "BUILD" :   
+                {
+                    "name"      :   "Ball Langmuir Probe (BLP)",
+                    "shape"     :   "spherical",
+                    "diameter"  :   1e-2,
+                    "length"    :   7.9e-3,
+                    "args"      :   [],
+                    "kwargs"    :   {}
+                }
+            },
+            "data"      :  {    "BUILD" : 
+                {
+                    "name"      :   "Test NSTAR BLP IV Trace",
+                    "file"      :   "tests/gui_langmuir/database/lang_data-01-no_header.csv",
+                    "file_type" :   ".csv",
+                    "negative"  :   true,
+                    "args"      :   [],
+                    "kwargs"    :   {"delimiter":",","header":null, "names":["voltage","current"],"skiprows": null}
+
+                }
+            },
+            "methods"   :   {   "algorithm"    :   "topham"},
+            "properties":   {},
+            "algorithm_args"    :   [],
+            "algorithm_kwargs"  :   {
+                "floating_potential_kwargs"    :   {"interpolate"   :   "linear"},
+                "plasma_potential_kwargs"      :   {},
+                "electron_temperature_kwargs"  :   {
+                    "fit_kwargs"    :   {
+                        "fitmax"    :   null,
+                        "bitmax"    :   null,
+                        "istart"    :   null,
+                        "iend"      :   null,
+                        "printlog"  :   false
+                    }
+                },
+                "electron_density_kwargs"      :   {},
+                "electron_saturation_current_kwargs"   :   {
+                    "fit_kwargs"    :   {
+                        "fitmax"    :   1,
+                        "bitmax"    :   1,
+                        "istart"    :   32,
+                        "iend"      :   -1,
+                        "printlog" :   false
+                    }
+                },
+                "electron_saturation_current_density_kwargs"   :   {},
+                "ion_density_kwargs"      :   {},
+                "ion_saturation_current_kwargs"   :   {},
+                "ion_saturation_current_density_kwargs"   :   {},
+                "electron_debye_length_kwargs" :   {},
+                "r_p/lambda_De_kwargs"     :   {},
+                "sheath_kwargs"            :   {},
+                "I_i_thin_kwargs"          :   {},
+                "I_i_transitional_kwargs"  :   {},
+                "I_i_thick_kwargs"         :   {}
+            }
+        }
+    }
+}

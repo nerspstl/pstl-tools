@@ -11,7 +11,7 @@
         }
     },
     "probe"     :   {"BUILD_FROM_FILE"    :   "tests/gui_langmuir/settings/solver/probe/settings_BLP.json"},
-    "data"      :   {"BUILD_FROM_FILE"    :   "tests/gui_langmuir/settings/solver/data/settings_lang_data.json"},
+    "data"      :   {"BUILD_FROM_FILE"    :   "tests/gui_langmuir/settings/solver/data/settings_lang_data-01.json"},
     "methods"   :   {"algorithm"    :   "topham"},
     "properties":   {},
     "algorithm_args"    :   [],
