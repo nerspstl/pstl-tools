@@ -50,12 +50,12 @@ parser.add_argument('-g','--neutral_gas', help="define gas composition i.e. Xeno
 parser.add_argument('-p','--probe', help="define probe shape diameter length* where *only for spherical",nargs="*")
 
 #parser.add_argument('-O','--output_settings_file', help="location of output results defining json file",type=str)
-parser.add_argument('-G','--neutral_gas_settings_file', help="location of neutral gas (and plasma) defining json file",type=str)
-parser.add_argument('-P','--probe_settings_file', help="location of probe defining json file",type=str)
-parser.add_argument('-D','--data_settings_file', help="location of data defining json file",type=str)
-parser.add_argument('-L', '--solver_settings_file', help="location of solver settings json file",type=str)
+parser.add_argument('-G',   '--neutral_gas_settings_file',  help="location of neutral gas (and plasma) defining json file",  type=str)
+parser.add_argument('-P',   '--probe_settings_file',        help="location of probe defining json file",                     type=str)
+parser.add_argument('-D',   '--data_settings_file',         help="location of data defining json file",                      type=str)
+parser.add_argument('-L',   '--solver_settings_file',       help="location of solver settings json file",                    type=str)
 
-parser.add_argument('-S', '--settings_file', help="location of whole gui settings json file",type=str)
+parser.add_argument('-S',   '--settings_file',              help="location of whole gui settings json file",                 type=str)
 args = parser.parse_args()
 
 
