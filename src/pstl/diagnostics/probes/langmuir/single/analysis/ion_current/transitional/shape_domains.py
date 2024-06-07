@@ -14,8 +14,6 @@ def planar_domain_condition(voltage, V_s, KT_e):
         KT_e                         # [eV]
     )
 
-    returns = np.where
-
     cond1 = 3 < condition
     cond2 = condition < 30
     return np.logical_and(cond1, cond2)  # 10 < rp/l < 45
