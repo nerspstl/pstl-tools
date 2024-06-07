@@ -11,7 +11,7 @@ def shape_selector(shape):
 
 # Declare available methods
 available_methods = {
-    0: ['cylinderical'],
+    0: ['cylinderical', 'cylindrical'],
     1: ['spherical'],
     2: ['planar', 'planer'],
 }
