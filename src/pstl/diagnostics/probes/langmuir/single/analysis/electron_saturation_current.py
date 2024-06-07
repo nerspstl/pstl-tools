@@ -11,6 +11,7 @@ import numpy.typing as npt
 from numpy.polynomial import Polynomial as P
 
 from pstl.utls.verify import verify_type, verify_array_polarity
+#from pstl.utls.helpers import interpolate
 from pstl.utls.helpers import interpolate
 from pstl.utls.functionfit.helpers import find_fit
 from pstl.diagnostics.probes.langmuir.single.analysis.floating_potential import get_floating_potential, check_for_floating_potential

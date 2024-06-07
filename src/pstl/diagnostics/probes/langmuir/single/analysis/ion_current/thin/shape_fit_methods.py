@@ -1,7 +1,8 @@
 import numpy as np
 
 from pstl.utls import constants as c
-from pstl.utls.helpers import find_fit
+#from pstl.utls.helpers import find_fit
+from pstl.utls.functionfit import find_fit
 from pstl.diagnostics.probes.langmuir.single.analysis.floating_potential import (
     check_for_floating_potential, get_below_floating_potential,
 )
