@@ -4,24 +4,34 @@ from pstl.utls import constants as c
 from pstl.diagnostics.probes.langmuir.single.analysis.ion_current.thin.shape_func_helpers import _function
 
 # Functions for calculating current
-def cylinderical_function(voltage, area, n0, V_s, m_i, KT_e, r_p, lambda_D):
+def cylinderical_ab_calculator(r_p, lambda_D):
     ratio = r_p/lambda_D
     a = 1.18 - 0.00080*np.power(ratio, 1.35)
     b = 0.0684 + np.power(0.722+0.928*ratio, -0.729)
+    return a, b
+
+def cylinderical_function(voltage, area, n0, V_s, m_i, KT_e, r_p, lambda_D):
+    a,b = cylinderical_ab_calculator(r_p, lambda_D)
     return _partial_function(voltage, area, n0, V_s, m_i, KT_e, a, b)
 
-
-def spherical_function(voltage, area, n0, V_s, m_i, KT_e, r_p, lambda_D):
+def spherical_ab_calculator(r_p,lambda_D):
     ratio = r_p/lambda_D
     a = 1.58 + np.power(-0.056 + 0.816*ratio, -0.744)
     b = -0.933 + np.power(0.0148+0.119*ratio, -0.125)
+    return a, b
+
+def spherical_function(voltage, area, n0, V_s, m_i, KT_e, r_p, lambda_D):
+    a, b =spherical_ab_calculator(r_p, lambda_D)
     return _partial_function(voltage, area, n0, V_s, m_i, KT_e, a, b)
 
-
-def planar_function(voltage, area, n0, V_s, m_i, KT_e, r_p, lambda_D):
+def planar_ab_calculator(r_p,lambda_D):
     ratio = r_p/lambda_D
     a = np.exp(-0.5)*np.sqrt(2*np.pi)*(2.28*np.power(ratio, -0.749))
     b = 0.806*np.power(ratio, -0.0692)
+    return a, b
+
+def planar_function(voltage, area, n0, V_s, m_i, KT_e, r_p, lambda_D):
+    a, b = planar_ab_calculator(r_p, lambda_D)
     partial = _partial_function(voltage, area, n0, V_s, m_i, KT_e, a, b)
     standard = _function(area, n0, m_i, KT_e)
     return np.add(partial, standard)
