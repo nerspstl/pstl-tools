@@ -379,7 +379,7 @@ class LinearSemilogyDoubleCanvasSingleProbeLangmuir(LinearSemilogyDoubleCanvas):
         self.ion_saturation_fill = None
 
         # make 1der plot show hide buttons
-        canvas_1der = FirstDerivativeSingleProbeLangmuir(self,cnf)
+        canvas_1der = FirstDerivativeSingleProbeLangmuir(self,cnf, **kwargs)
         canvas_1der.grid(row=0, column=0, sticky="NWSE")
         self.widgets.frames["1der"] = canvas_1der
         show_hide_btn = tk.Button(self,cnf,text="Show/Hide",command=self.show_hide)

@@ -380,7 +380,10 @@ def main():
         print("All settings present")
         with open(args.settings_file) as f: 
             settings = json.load(f)
-    gui_langmuir(settings)
+    try:
+        gui_langmuir(settings)
+    except Flagged as e:
+        print(e)
 
 def olde_main(settings, app):
     # initiate app
