@@ -1,5 +1,5 @@
 {
-    "saveas"    :   "tests/gui_langmuir/outputs/output_plot.png",
+    "saveas"    :   "tests/gui_langmuir/results/results_plot.png",
     "stype"     :   "png",
     "width"     :   4,
     "height"    :   3

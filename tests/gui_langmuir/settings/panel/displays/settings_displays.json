@@ -1,4 +1,4 @@
 {
-    "fname" :   "tests/gui_langmuir/outputs/output_results.csv",
+    "fname" :   "tests/gui_langmuir/results/results_outputs.csv",
     "ftype" :   "csv"
 }
