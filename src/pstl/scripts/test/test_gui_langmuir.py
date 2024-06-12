@@ -36,7 +36,7 @@ from pstl.diagnostics.probes.langmuir.single import setup as probe_setup
 from pstl.diagnostics.probes.langmuir.single.analysis.solvers.solvers import SingleLangmuirProbeSolver as SLPS
 from pstl.diagnostics.probes.langmuir.single.analysis.solvers.solvers import SingleLangmuirProbeSolver as SLPS
 
-style.use("bmh")
+#style.use("bmh")
 
 parser = argparse.ArgumentParser(
                     prog='GUI Langmuir',
