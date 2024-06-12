@@ -12,7 +12,8 @@ def shape_selector(shape):
 
 
 def cylinderical_ab(*args, **kwargs):
-    a = 2*np.sqrt(np.pi)
+    #a = 2*np.sqrt(np.pi) # In Lobbia paper it is defined as this one but I think it is wrong
+    a = 2/np.sqrt(np.pi)
     b = 0.5
     return a, b
 
@@ -33,9 +34,9 @@ def _thick_spherical_and_planar_ab(*args, **kwargs):
 
 # Declare available methods
 available_shapes = {
-    0: ['cylinderial'],
+    0: ['cylinderical'],
     1: ['spherical'],
-    2: ['planar'],
+    2: ['planar','planer'],
 }
 # Declare correspondin functions for available_methods
 available_shape_functions = {

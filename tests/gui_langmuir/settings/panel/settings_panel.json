@@ -1,0 +1,4 @@
+{
+    "displays_kwargs"  :   {"FROM_FILE":"tests/gui_langmuir/settings/panel/displays/settings_displays.json"},
+    "controls_kwargs"  :   {"FROM_FILE":"tests/gui_langmuir/settings/panel/controls/settings_controls.json"}
+}

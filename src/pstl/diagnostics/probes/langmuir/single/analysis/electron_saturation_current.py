@@ -11,8 +11,10 @@ import numpy.typing as npt
 from numpy.polynomial import Polynomial as P
 
 from pstl.utls.verify import verify_type, verify_array_polarity
+#from pstl.utls.helpers import interpolate
+from pstl.utls.helpers import interpolate
 from pstl.utls.functionfit.helpers import find_fit
-from pstl.diagnostics.probes.langmuir.single.analysis.floating_potential import get_floating_potential
+from pstl.diagnostics.probes.langmuir.single.analysis.floating_potential import get_floating_potential, check_for_floating_potential
 from pstl.diagnostics.probes.langmuir.single.analysis.electron_temperaure import get_electron_temperature
 # from funcs_plasma_potential import get_plasma_potential
 
@@ -30,7 +32,7 @@ default_fit_kwargs = {
 }
 
 
-def get_electron_saturation_current(*args, method=0, **kwargs) -> Tuple[float, Dict[str, Any]]:
+def get_electron_saturation_current(*args, method: int | str | None = 0, **kwargs) -> Tuple[float, Dict[str, Any]]:
     # Declare available methods
     available_methods = {
         0: 'fit',
@@ -111,7 +113,7 @@ def get_electron_saturation_current_fit(
         verify_type(V_s, (int, float, np.int64, np.float64, np.ndarray), 'V_s')
         istart = np.where(voltage < V_s)[0][-1]+1
     else:  # uses vf
-        istart = np.where(voltage < V_f)[0][-1]+1
+        istart = np.where(voltage > V_f)[0][0]
 
     # get stoping splicing index of data (aka length of data)
     iend = len(voltage)
@@ -187,8 +189,10 @@ def get_electron_saturation_current_fit(
     # checks that an elec_sat_fit was made
     if elec_sat_fit is None:
         raise ValueError("'elec_sat_fit' not found")
+
     # calculate electron saturation current
-    electron_saturation_current = elec_sat_fit(V_s)
+    #electron_saturation_current = elec_sat_fit(V_s)
+    electron_saturation_current = interpolate(V_s,voltage,current,method="linear")
 
     # determine returns based on input arguments
     others: dict[str, Any] = {"fit": elec_sat_fit}

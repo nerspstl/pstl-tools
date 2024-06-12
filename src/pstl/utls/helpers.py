@@ -7,8 +7,10 @@ from numpy.polynomial import Polynomial as P
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.signal import savgol_filter, find_peaks
+from scipy.interpolate import interp1d
 import pandas as pd
 
+from pstl.utls import constants as c
 from pstl.utls.errors import FitConvergenceError, MissingReturnError
 from pstl.utls.verify import verify_iterables, verify_1D_array, verify_type
 
@@ -177,6 +179,56 @@ def probe_radius_to_debye_length(lambda_D, radius_probe):
 
     other = {"sheath_type": sheath}
     return ratio, other
+
+def interpolate(x,X,Y,method=None):
+    # find nearest neighbors (no sorting is performed)
+    lenX = len(X)
+    k = 0
+    while X[k] <= x :
+        if X[k] != x:
+            if k+1 == lenX:
+                raise ValueError("'{x}' not in domain of X")
+            elif k+1 > lenX:
+                raise ValueError("Something really went wrong")
+            if X[k+1] > x:
+                break
+            elif X[k+1] < x:
+                k += 1
+            elif X[k+1] == x:
+                y = Y[k+1]
+                method = None
+                break
+        else:
+            # return the value
+            y = Y[k]
+            method = None
+            break
+    # Perform interpolation
+    if method is None:
+        pass
+    elif method == 'linear':
+        if x != 0:
+            f = interp1d(X[k:k+2],Y[k:k+2] )  # type: ignore
+            y: float = f(x)
+        else:
+            pass
+    elif method == 'exponential':
+        if x != 0:
+            xp = np.log(Y)
+            f = interp1d(xp, X)
+            y: float = f(x)
+        else:
+            pass
+    elif method == 'logarithmic':
+        if x != 0:
+            xp = np.log(X)
+            f = interp1d(Y, xp)
+            y: float = np.exp(f(x))
+        else:
+            pass
+    else:
+        raise ValueError("Invalid value for interpolate parameter.")
+    return y
 
 
 def find_intersection(coefs1, coefs2):
@@ -767,3 +819,18 @@ def _fit_polynomial_func(x, *args):
         )
 
     return total
+
+
+def ideal_gas_law_pressure_to_density(P_gas, T_gas: int | float = 300):
+    """
+    Returns neutral gas density [Torr]
+
+    Parameters:
+    P_gas [Torr]
+    T_gas (optional=300) [K]
+    """
+
+    P = P_gas
+    P = P*101325/760            # unit: J/m^3 <- [Torr]*[101325 Pa/760 Torr]*[1 J/m^3/1 Pa] NOTE: 1 atm = 101325 Pa = 760 Torr
+    N = P/(c.K_B*T_gas )        # unit: m^-3 <- [J/m^3]/([J/K]*[K])
+    return N                    # unit: m^-3

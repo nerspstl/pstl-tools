@@ -7,8 +7,8 @@ Tools for working with PSTL equipment easier
 
 """
 
-__version__ = '0.1.0'
-__author__ = 'tyjoto'
+__version__ = 'v2024.06.0dev'
+__author__ = 'umich-pstl'
 
 from pstl import diagnostics
 from pstl import gui

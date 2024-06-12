@@ -1,0 +1,9 @@
+{
+    "name"          :   "Rocket Chamber Background Gas (Xenon)",
+    "neutral_gas"   :   "xenon",
+    "masses"        :   {"m_i": null,   "m_e": null},
+    "amu"           :   true,
+    "args"          :   [],
+    "kwargs"        :   {}
+
+}

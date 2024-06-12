@@ -27,14 +27,15 @@ def smooth_filter(data, polyorder=1, window_length=1, *args, **kwargs):
     return smoothed_data
 
 
-def preprocess_filter(data):
+def preprocess_filter(data, *args, delete=True, **kwargs):
     voltage = data.voltage
     current = data.current
 
     # perform preprocessing filter
     voltage, current, pts_deleted = preprocessing_filter(
-        voltage, current, delete=True, interactive=False,
+        voltage, current, delete=delete, interactive=False,
     )
+    #print(pts_deleted)
 
     filtered_data = pd.DataFrame({"voltage": voltage, "current": current})
     deleted_data = pd.DataFrame(
@@ -148,7 +149,7 @@ def preprocessing_filter(xdata: np.ndarray, ydata: np.ndarray,
 
     # if interp is 'linear', 'exponetial', 'polynomial.
     interp_strings = ['linear', 'exponential', 'polynomial']
-    if replace and interp in interp_strings:
+    if (replace is True) and (interp in interp_strings):
         if interp in ['linear']:
             fit_func = _fit_linear_func
         elif interp in ['exponential']:
@@ -184,18 +185,18 @@ def preprocessing_filter(xdata: np.ndarray, ydata: np.ndarray,
             ydata_modified[ipeak] = ydata_fitted
         points_modified = np.array([xdata[peaks], ydata[peaks]]).transpose()
     # if delete is True
-    elif delete:
+    elif delete is True:
         xdata_modified = np.delete(xdata, peaks)
         ydata_modified = np.delete(ydata, peaks)
         points_modified = np.array([xdata[peaks], ydata[peaks]]).transpose()
     # if replace but wrong interp
-    elif replace is False or interp not in interp_strings:
+    elif (replace is False) and (interp not in interp_strings):
         raise ValueError("Error in 'replace is %s and 'interp' is %s" %
                          (str(replace), str(interp)))
     else:
         xdata_modified = xdata.copy()
         ydata_modified = ydata.copy()
-        points_modified = None
+        points_modified = np.array([[],[]]).transpose()
 
     # if interactive plot, makes plots
     if interactive:

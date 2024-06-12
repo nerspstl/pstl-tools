@@ -14,6 +14,15 @@ K_B_eV = 8.617333262e-5  # eV/K
 # Permitivity of free space
 epsilon_0 = 8.85418782e-12  # m-3 kg-1 s4 A2
 
+# Avogadro's Number
+N_A = 6.02214076e23
+
+# amu to kg
+def amu_2_kg(amu):
+    return np.divide(amu, N_A*1000)
+def kg_2_amu(kg):
+    return np.multiply(kg, N_A*1000)
+
 
 # Debye length
 def lambda_D(n, KT_e):

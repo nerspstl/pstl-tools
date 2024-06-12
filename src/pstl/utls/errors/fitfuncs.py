@@ -2,6 +2,11 @@ class FitConvergenceError(Exception):
     """Raised when Convergence of fit routine could not be found. 
     This was created so that a try and except could be used to account for convergence error such that 
     another method maybe used to achieve same result as this fit routine."""
+class FunctionFitError(Exception):
+    """Raised when function fit in funcfit routine could not be found. 
+    This was created so that a try and except could be used to account for functionfit error such that 
+    the algorithm can continue
+    """
 
 
 class MissingReturnError(Exception):

@@ -1,0 +1,6 @@
+{
+    "name"              :   "TEST_LANGMUIR-01",
+    "canvas_kwargs"     :   {"FROM_FILE"        :   "tests/gui_langmuir/settings/canvas/settings_canvas.json"},
+    "panel_kwargs"      :   {"FROM_FILE"        :   "tests/gui_langmuir/settings/panel/settings_panel.json"},
+    "solver"            :   {"BUILD_FROM_FILE"  :   "tests/gui_langmuir/settings/solver/settings_langmuir_solver-01.json"}
+}

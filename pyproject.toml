@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pstl-tools"
-version = "0.1.0"
+version = "v2024.06.0dev"
 description = "Python scripts for making working with UMICH NERS PSTL Lab Equipment much easier"
 readme = "README.md"
 authors = [{ name = "tyjoto", email = "tyjoto@gmail.com" }]
@@ -18,7 +18,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-keywords = ["pstl", "instruments", "tools","gpib","rs232","visa"]
+keywords = ["pstl", "instruments", "tools","gpib","rs232","visa", "gui", "langmuir"]
 dependencies = [
     "numpy",
     "matplotlib>=3.5.2",
@@ -26,23 +26,30 @@ dependencies = [
     "pandas",
     "scipy",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 [project.optional-dependencies]
-dev = ["pip-tools","pyvisa-py","pyserial","alicat","psutil","zeroconf"]
+dev = ["pip-tools", "psutil", "zeroconf"]
+pyvisa-py = ["pyvisa-py"]
+other = ["pyserial","alicat"]
 
 [project.urls]
-Homepage = "https://github.com/nerspstl/pstl-tools"
+Homepage = "https://github.com/umich-pstl/pstl-tools"
 
 [project.scripts]
 #ipe = "ipe.__main__:main"
 janus_langmuir_wall = "pstl.scripts.janus.probes.langmuir.wall.__main__:main"
-gui_langmuir = "pstl.scripts.test.test_gui_langmuir:main"
+gui_langmuir = "pstl.scripts.gui_langmuir.__main__:main"
+rc_bakeout = "pstl.scripts.monitor.main_daq.py:main"
 
 [tool.bumpver]
-current_version = "0.1.0"
-version_pattern = "MAJOR.MINOR.PATCH"
+current_version = "v2024.06.0dev"
+version_pattern = "vYYYY.0M.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
+tag_message = "{new_version}"
+tag_scope = "default"
+pre_commit_hook = ""
+post_commit_hook = ""
 commit = true
 tag = true
 push = true
@@ -52,6 +59,5 @@ push = true
 "src/pstl/__init__.py" = ["{version}"]
 "README.md" = [
     "{version}",
-    "{pep440_version}",
 ]
 

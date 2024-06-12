@@ -1,0 +1,9 @@
+{
+    "name"      :   "Test NSTAR BLP IV Trace",
+    "file"      :   "tests/gui_langmuir/database/lang_data-01-no_header.csv",
+    "file_type" :   ".csv",
+    "negative"  :   true,
+    "args"      :   [],
+    "kwargs"    :   {"delimiter":",","header":null, "names":["voltage","current"],"skiprows": null}
+
+}

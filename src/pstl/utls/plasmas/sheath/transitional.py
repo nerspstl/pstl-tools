@@ -32,9 +32,9 @@ def planar_ab(r_p, lambda_D, *args, **kwargs):
 
 # Declare available methods
 available_shapes = {
-    0: ['cylinderial'],
+    0: ['cylinderical'],
     1: ['spherical'],
-    2: ['planar'],
+    2: ['planar','planer'],
 }
 # Declare correspondin functions for available_methods
 available_shape_functions = {
