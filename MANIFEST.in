@@ -1,4 +1,4 @@
 # MANIFEST.in
 
 include src/pstl/*.toml
-include src/extras/images/*
+include src/pstl/extras/images/*
