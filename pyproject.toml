@@ -18,7 +18,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-keywords = ["pstl", "instruments", "tools","gpib","rs232","visa"]
+keywords = ["pstl", "instruments", "tools","gpib","rs232","visa", "gui", "langmuir"]
 dependencies = [
     "numpy",
     "matplotlib>=3.5.2",
@@ -30,7 +30,8 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 dev = ["pip-tools", "psutil", "zeroconf"]
-pyvisa-py = ["pyvisa-py","pyserial","alicat"]
+pyvisa-py = ["pyvisa-py"]
+other = ["pyserial","alicat"]
 
 [project.urls]
 Homepage = "https://github.com/umich-pstl/pstl-tools"

@@ -8,15 +8,21 @@ v2024.06.0dev
 - v3.11
 
 ## Requried Packages
-- pyvisa (or pyvisa-py)
+- pyvisa (with VISA library aviable or pyvisa-py)
 - numpy
 - scipy
 - pandas
 - matplotlib
 ## Optional Packages
-### clean
-- pyserial
+### pyvisa-py
+- pyvisa-py
+### dev
 - pip-tools
+- psutil
+- zeroconf
+### other
+- pyserial
+- alicat
 
 ## Subpackages
 ### Install
@@ -71,10 +77,16 @@ python -m pip install pstl-tools
 
 - Install pyvisa-py and other dependences (open-source version of the previous)
 
-If no visa library (from NI-LABVIEW or Keysight etc), run the following
+If no visa library (from NI-LABVIEW or Keysight etc), you may see an error saying:
 
 ```
-pip install pstl-tools[pyvisa-py]
+ValueError: Could not locate a VISA implementation. Install either the IVI binary or pyvisa-py.
+```
+
+then, run the following
+
+```
+pip install pyvisa-py
 ```
 
 [For more help vith python venv](https://docs.python.org/3/library/venv.html)
