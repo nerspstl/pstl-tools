@@ -7,7 +7,7 @@ Tools for working with PSTL equipment easier
 
 """
 
-__version__ = 'v2024.06.3'
+__version__ = 'v2024.06.4'
 __author__ = 'umich-pstl'
 
 from pstl import diagnostics
