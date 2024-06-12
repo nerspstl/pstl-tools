@@ -278,7 +278,8 @@ def topham_get_ion_current_and_density(
         *ion_current_args,
         current=current,
         method=sheath_method, V_f=V_f, n_i=n_i, n0=n_e, m_i=m_i, KT_e=KT_e, 
-        V_s=V_s, area=area,
+        V_s=V_s, area=area,r_p=r_p, 
+        lambda_De=lambda_De,
         **ion_current_kwargs,
     )
     return I_i, I_i_extras, n_i, n_i_extras

@@ -30,9 +30,9 @@ def thin_sheath_method(I_is, area, KT_e, m_i, shape="Unknown", *args, **kwargs):
     return n_i, {"method": "thin", "shape": shape}
 
 
-def transitional_sheath_method(voltage, current, area, m_i, KT_e, shape, r_p, lambda_D, *args, **kwargs):
+def transitional_sheath_method(voltage, current, area, m_i, KT_e, shape, r_p, lambda_De, *args, **kwargs):
     func = transitional.shape_selector(shape)
-    a, b = func(r_p, lambda_D)
+    a, b = func(r_p, lambda_De)
     n_i = _transitional_and_thick_method(
         voltage, current, area, m_i, KT_e, a, b)
     return n_i, {"method": "transitional", "shape": shape}

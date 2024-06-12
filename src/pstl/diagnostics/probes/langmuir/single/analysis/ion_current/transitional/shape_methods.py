@@ -34,8 +34,8 @@ def cylinderical_method(voltage, current, *args, **kwargs):
 
     # I_i function
     r_p = kwargs.pop("r_p", None)
-    lambda_D = kwargs.pop("lambda_D", None)
-    _,b = cylinderical_ab_calculator(r_p, lambda_D)
+    lambda_De = kwargs.pop("lambda_De", None)
+    _,b = cylinderical_ab_calculator(r_p, lambda_De)
     fit_kwargs = dict(default_fit_power_kwargs)
     fit_kwargs["power"] = b
     fit_kwargs.update(kwargs.pop("fit_kwargs", {}))
@@ -58,12 +58,12 @@ def cylinderical_method(voltage, current, *args, **kwargs):
     extras = {"fit": fit, "method": "thin", "shape": "cylinderical"}
     return I_i, extras
     
-def cylinderical_func_method(voltage, area, n0, V_s, m_i, KT_e, r_p, lambda_D, *args, **kwargs):
+def cylinderical_func_method(voltage, area, n0, V_s, m_i, KT_e, r_p, lambda_De, *args, **kwargs):
 
     func = where_function_else_zero(
         wrapper_cylinderical_function, cylinderical_domain_condition)
 
-    coefs = (V_s, KT_e, area, n0, m_i, r_p, lambda_D)
+    coefs = (V_s, KT_e, area, n0, m_i, r_p, lambda_De)
     I_i = func(voltage, *coefs)
 
     fit = make_CustomFit(func, voltage, I_i, coefs)
@@ -80,8 +80,8 @@ def spherical_method(voltage, current, *args, **kwargs):
 
     # I_i function
     r_p = kwargs.pop("r_p", None)
-    lambda_D = kwargs.pop("lambda_D", None)
-    _,b = spherical_ab_calculator(r_p, lambda_D)
+    lambda_De = kwargs.pop("lambda_De", None)
+    _,b = spherical_ab_calculator(r_p, lambda_De)
     fit_kwargs = dict(default_fit_linear_kwargs)
     fit_kwargs["power"] = b
     fit_kwargs.update(kwargs.pop("fit_kwargs", {}))
@@ -105,11 +105,11 @@ def spherical_method(voltage, current, *args, **kwargs):
     return I_i, extras
 
 
-def spherical_func_method(voltage, area, n0, V_s, m_i, KT_e,  r_p, lambda_D, *args, **kwargs):
+def spherical_func_method(voltage, area, n0, V_s, m_i, KT_e,  r_p, lambda_De, *args, **kwargs):
     func = where_function_else_zero(
         wrapper_spherical_function, spherical_domain_condition)
 
-    coefs = (V_s, KT_e, area, n0, m_i, r_p, lambda_D)
+    coefs = (V_s, KT_e, area, n0, m_i, r_p, lambda_De)
     I_i = func(voltage, *coefs)
 
     fit = make_CustomFit(func, voltage, I_i, coefs)
@@ -127,8 +127,8 @@ def planar_method(voltage, current, *args, **kwargs):
 
     # I_i function
     r_p = kwargs.pop("r_p", None)
-    lambda_D = kwargs.pop("lambda_D", None)
-    _,b = spherical_ab_calculator(r_p, lambda_D)
+    lambda_De = kwargs.pop("lambda_De", None)
+    _,b = spherical_ab_calculator(r_p, lambda_De)
     fit_kwargs = dict(default_fit_linear_kwargs)
     fit_kwargs["power"] = b
     fit_kwargs.update(kwargs.pop("fit_kwargs", {}))
@@ -152,11 +152,11 @@ def planar_method(voltage, current, *args, **kwargs):
     return I_i, extras
 
 
-def planar_func_method(voltage, area, n0, V_s, m_i, KT_e, r_p, lambda_D, *args, **kwargs):
+def planar_func_method(voltage, area, n0, V_s, m_i, KT_e, r_p, lambda_De, *args, **kwargs):
     func = where_function_else_zero(
         wrapper_planar_function, planar_domain_condition)
 
-    coefs = (V_s, KT_e, area, n0, m_i, r_p, lambda_D)
+    coefs = (V_s, KT_e, area, n0, m_i, r_p, lambda_De)
     I_i = func(voltage, *coefs)
 
     fit = make_CustomFit(func, voltage, I_i, coefs)

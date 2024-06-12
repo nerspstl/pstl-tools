@@ -245,6 +245,16 @@ class LinearSemilogySingleLangmuirCombinedData(CombinedDataFrame):
         self.widgets.buttons["close"] = btn_close
     
     def solve(self,*args, **kwargs):
+        # solve for data
+        self.solver.solve(*args, **kwargs)
+
+        # make plots of solved for plasma parameters
+        self.canvas.make_plot(self.solver)
+
+        # pass data to results panel
+        self.panel.results = self.solver.results
+
+    def solve_with_preprocessing(self,*args, **kwargs):
         # pre process data
         self.solver.preprocess()
 
@@ -270,14 +280,14 @@ class LinearSemilogySingleLangmuirCombinedData2(CombinedDataFrame2):
             self, 
             solver: SingleLangmuirProbeSolver, 
             *args,
-            master=None, cnf={}, name=None,**kwargs):
+            master=None, cnf={}, name=None, preprocess=True, **kwargs):
         Canvas = LinearSemilogyDoubleCanvasSingleProbeLangmuir
         Panel = SingleProbeLangmuirPanelFrame
         super().__init__(solver, Canvas, Panel, *args, master=master,cnf=cnf, name=name,**kwargs)
         # can call self.canvas, self.panel, self.property
 
         # solve Trace
-        self.solve(*args,**kwargs)
+        self.solve(*args,preprocess=preprocess,**kwargs)
 
         # make save and exit button
         btn_save_n_close = tk.Button(self,cnf=cnf,command=self.save_n_close,text="Save and Close")
@@ -298,11 +308,13 @@ class LinearSemilogySingleLangmuirCombinedData2(CombinedDataFrame2):
             if "update" in control_frame.widgets.buttons:
                 control_frame.widgets.buttons["update"].configure(command=self.updated_solve)
 
-
-    
-    def solve(self, *args, **kwargs):
+    def solve(self, *args, preprocess=True, **kwargs):
         # pre process data
-        self.solver.preprocess()
+        self.solver.preprocess(delete=preprocess)
+
+        self.solve_no_preprocessing(self, *args, **kwargs)
+    
+    def solve_no_preprocessing(self, *args, **kwargs):
 
         try:
             # solve for data
@@ -362,7 +374,7 @@ class LinearSemilogySingleLangmuirCombinedData2(CombinedDataFrame2):
         self.canvas.clear_plots()
 
         # pass in and resolve
-        self.solve(*args, **kwargs)
+        self.solve_no_preprocessing(*args, **kwargs)
 
     def save_n_close(self):
         self.panel.save()

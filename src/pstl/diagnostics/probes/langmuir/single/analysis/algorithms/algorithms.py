@@ -217,17 +217,20 @@ def topham(voltage, current, shape, r_p, area, m_i, *args,
             n_e, n_e_extras = get_electron_density(
                 I_es, area=area, KT_e=KT_e, m_e=c.m_e, method="I_es",
             )
+            #print("m_i\n", m_i)
             # get ionsaturation value at V_f based on V_s, I_es, n_e, KT_e, V_f (need V_s to solve)
             I_is, I_is_extras = get_ion_saturation_current(
-                voltage, current, V_f=V_f, method=3,
+                voltage, current, V_f=V_f, method=4,
                 I_i_fit=I_i_fit, I_i_method=sheath_method,
                 V_s=V_s, n_e=n_e,T_e=KT_e, area=area,
+                electron_sat=I_es, amu=c.kg_2_amu(m_i),
             )
+            #print("I_is: ", I_is)
             # temp ion density
             key = "I_is"
             ion_current_kwargs = func_kwargs[key]
             n_i, n_i_extras = get_ion_density(
-                I_is=I_is, voltage=voltage, current=current, area=area, KT_e=KT_e, m_i=m_i, method=sheath_method, shape=shape, **ion_current_kwargs,
+                I_is=I_is, voltage=voltage, current=current, area=area, KT_e=KT_e, m_i=m_i, method=sheath_method, shape=shape, r_p=r_p, lambda_De=lambda_De,**ion_current_kwargs,
             )
             # lambda_D
             lambda_De, lambda_De_extras = get_lambda_D(n_e, KT_e)

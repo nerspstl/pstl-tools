@@ -158,9 +158,9 @@ class DiagnosticData(PSTLObject):
         # based on data argument set data variable to use
         self._data = data
 
-    def preprocess(self, *args, source=0, **kwargs):
+    def preprocess(self, *args, source=0, delete=True, **kwargs):
         filtered_data, deleted_data = preprocess_filter(
-            self._data, *args, **kwargs)
+            self._data, *args, delete=delete, **kwargs)
         self.set_data(self._data, source=source,
                       deleted_data=deleted_data, filtered_data=filtered_data)
 

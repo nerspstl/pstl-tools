@@ -1,17 +1,17 @@
 import string
 from typing import Any, Optional, Union, Tuple, Sequence, Callable
+import traceback
 
 import numpy as np
 import numpy.typing as npt
 from numpy.polynomial import Polynomial as P
+from numpy.linalg import LinAlgError
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.signal import savgol_filter, find_peaks
-from scipy.interpolate import interp1d
 import pandas as pd
 
-from pstl.utls import constants as c
-from pstl.utls.errors import FitConvergenceError, MissingReturnError
+from pstl.utls.errors import FitConvergenceError, MissingReturnError, FunctionFitError
 from pstl.utls.verify import verify_iterables, verify_1D_array, verify_type
 
 
@@ -179,56 +179,6 @@ def probe_radius_to_debye_length(lambda_D, radius_probe):
 
     other = {"sheath_type": sheath}
     return ratio, other
-
-def interpolate(x,X,Y,method=None):
-    # find nearest neighbors (no sorting is performed)
-    lenX = len(X)
-    k = 0
-    while X[k] <= x :
-        if X[k] != x:
-            if k+1 == lenX:
-                raise ValueError("'{x}' not in domain of X")
-            elif k+1 > lenX:
-                raise ValueError("Something really went wrong")
-            if X[k+1] > x:
-                break
-            elif X[k+1] < x:
-                k += 1
-            elif X[k+1] == x:
-                y = Y[k+1]
-                method = None
-                break
-        else:
-            # return the value
-            y = Y[k]
-            method = None
-            break
-    # Perform interpolation
-    if method is None:
-        pass
-    elif method == 'linear':
-        if x != 0:
-            f = interp1d(X[k:k+2],Y[k:k+2] )  # type: ignore
-            y: float = f(x)
-        else:
-            pass
-    elif method == 'exponential':
-        if x != 0:
-            xp = np.log(Y)
-            f = interp1d(xp, X)
-            y: float = f(x)
-        else:
-            pass
-    elif method == 'logarithmic':
-        if x != 0:
-            xp = np.log(X)
-            f = interp1d(Y, xp)
-            y: float = np.exp(f(x))
-        else:
-            pass
-    else:
-        raise ValueError("Invalid value for interpolate parameter.")
-    return y
 
 
 def find_intersection(coefs1, coefs2):
@@ -406,14 +356,14 @@ def find_fit(
     # if reverse direction
     if reverse:
         # initialize counter index backward
-        jend = int(len_x) if iend is None else int(iend)
+        jend = int(len_x) if iend is None else int(iend) if int(iend)>=0 else int(len_x)+int(iend)
         # initiailize counter index forward
-        jstart = 0 if istart is None else int(istart)
+        jstart = 0 if istart is None else int(istart) if int(istart)>=0 else int(len_x)+int(istart)
     else:
         # initialize counter index forward
-        jstart = 0 if istart is None else int(istart)
+        jstart = 0 if istart is None else int(istart) if int(istart)>=0 else int(len_x)+int(istart)
         # initiailize counter index backward
-        jend = int(len_x) if iend is None else int(iend)
+        jend = int(len_x) if iend is None else int(iend)if int(iend)>=0 else int(len_x)+int(iend)
 
     # initialize jfstep, jbstep index advancement counters
     jfstep = 0
@@ -450,17 +400,16 @@ def find_fit(
 
     # outer loop helper function
     def outer():
-        out = ((jend >= min_points if istart is None else istart+min_points) if reverse else (
-            jstart <= len_x-min_points if iend is None else iend-min_points)) and (
-            (biteration < bitmax if bitmax is not None else True) if reverse else
-            (fiteration < fitmax if fitmax is not None else True))
+        step_bool = ((jend >= min_points if istart is None else istart+min_points) if reverse else (jstart <= len_x-min_points if iend is None else iend-min_points)) 
+        iteration_num_bool = ((biteration < bitmax if bitmax is not None else True) if reverse else (fiteration < fitmax if fitmax is not None else True))
+        out = step_bool and  iteration_num_bool
         return out
 
     # inner loop helper function
     def inner():
-        out = (jstart <= jend-min_points) if reverse else (jend >= jstart+min_points) and (
-            (fiteration < fitmax if fitmax is not None else True) if reverse else
-            (biteration < bitmax if bitmax is not None else True))
+        step_bool = (jstart <= jend-min_points) if reverse else (jend >= jstart+min_points)
+        iteration_num_bool= ((fiteration < fitmax if fitmax is not None else True) if reverse else (biteration < bitmax if bitmax is not None else True))
+        out =  step_bool and iteration_num_bool
 
         return out
 
@@ -478,63 +427,77 @@ def find_fit(
             x = xdata[jstart:jend]
             y = ydata[jstart:jend] * polarity
 
-            if fit_type == "linear" or (fit_type == "polynomial" and deg == 1):
-                # Determine the Coefs for linear (same as polynomial but deg is automatically set to 1 no matter what
-                # This uses  ~numpy.polonomial.Polonomial.fit (note: this is least squares fit )
-                poly = P.fit(x, y, deg=deg)
-                # y-values on standared plot using x-values of actual data area of interest
-                yp = poly.convert()(x)
+            try:
 
-            elif fit_type == "polynomial":
-                # Determine the Coefs for polynomial using regression fit using ~numpy.polonomial.Polonomial.fit (note: this is least squares fit )
-                poly = P.fit(x, y, deg=deg)
-                # y-values on standared plot using x-values of actual data area of interest
-                yp = poly.convert()(x)
+                if fit_type == "linear" or (fit_type == "polynomial" and deg == 1):
+                    # Determine the Coefs for linear (same as polynomial but deg is automatically set to 1 no matter what
+                    # This uses  ~numpy.polonomial.Polonomial.fit (note: this is least squares fit )
+                    poly = P.fit(x, y, deg=deg)
+                    # y-values on standared plot using x-values of actual data area of interest
+                    yp = poly.convert()(x)
 
-            elif fit_type == "exponential":
-                # Take natural log of data
-                logy = np.log(y)
-                # Determine the Coefs for semilogy using linear regression fit in semilogy space (note: this is non-linear regression)
-                poly = P.fit(x, logy, 1, w=np.sqrt(y))
-                # poly = P.fit(x, logy, 1)
-                # popt, opt = curve_fit(_fit_exponential_func, x,
-                #                      y, p0=poly.convert().coef)
-                # poly.coef = np.polynomial.polyutils.mapdomain(
-                #    popt, [-1, 1], poly.domain)
-                # poly.domain = [-1, 1]
+                elif fit_type == "polynomial":
+                    # Determine the Coefs for polynomial using regression fit using ~numpy.polonomial.Polonomial.fit (note: this is least squares fit )
+                    poly = P.fit(x, y, deg=deg)
+                    # y-values on standared plot using x-values of actual data area of interest
+                    yp = poly.convert()(x)
 
-                # y-values on standared plot using x-values of actual data area of interest
-                yp = np.exp(poly.convert()(x))
+                elif fit_type == "exponential":
+                    # Take natural log of data
+                    logy = np.log(y)
+                    # Determine the Coefs for semilogy using linear regression fit in semilogy space (note: this is non-linear regression)
+                    poly = P.fit(x, logy, 1, w=np.sqrt(y))
+                    # poly = P.fit(x, logy, 1)
+                    # popt, opt = curve_fit(_fit_exponential_func, x,
+                    #                      y, p0=poly.convert().coef)
+                    # poly.coef = np.polynomial.polyutils.mapdomain(
+                    #    popt, [-1, 1], poly.domain)
+                    # poly.domain = [-1, 1]
 
-            elif fit_type == "power":
-                # Take inverse power of data
-                mody = np.power(y, 1/power)
-                # Determine the Coefs for fit using linear regression fit in mod power space (note: this is non-linear regression)
-                poly = P.fit(x, mody, 1)
+                    # y-values on standared plot using x-values of actual data area of interest
+                    yp = np.exp(poly.convert()(x))
 
-                # y-values on standared plot using x-values of actual data area of interest
-                temp = poly.convert()(x)
-                if invalid == "ignore":
-                    with np.errstate(invalid='ignore'):
+                elif fit_type == "power":
+                    # Take inverse power of data
+                    mody = np.power(y, 1/power)
+                    # Determine the Coefs for fit using linear regression fit in mod power space (note: this is non-linear regression)
+                    poly = P.fit(x, mody, 1)
+
+                    # y-values on standared plot using x-values of actual data area of interest
+                    temp = poly.convert()(x)
+                    if invalid == "ignore":
+                        with np.errstate(invalid='ignore'):
+                            yp = np.power(temp, power)
+                    else:
                         yp = np.power(temp, power)
+
+                    # correct for polarity
+                    # yp *= polarity
+
+                    # check for nan because of the root
+                    inan = np.argwhere(np.isnan(yp))
+
+                    # remove nans for comparisons
+                    # y = np.delete(y, inan)
+                    # yp = np.delete(yp, inan)
+
                 else:
-                    yp = np.power(temp, power)
-
-                # correct for polarity
-                # yp *= polarity
-
-                # check for nan because of the root
-                inan = np.argwhere(np.isnan(yp))
-
-                # remove nans for comparisons
-                # y = np.delete(y, inan)
-                # yp = np.delete(yp, inan)
-
-            else:
-                raise ValueError("'fit_type' is not a known value of 'linear', 'polynomial', 'exponential', or 'power': {}".format(
-                    fit_type
-                ))
-
+                    raise ValueError("'fit_type' is not a known value of 'linear', 'polynomial', 'exponential', or 'power': {}".format(
+                        fit_type
+                    ))
+                    
+            except ValueError as err:
+                print("ValueError Fail: functionfit")
+                traceback.print_exc()
+                raise ValueError(err)
+            except LinAlgError as err:
+                print("General Fail: functionfit")
+                traceback.print_exc()
+                print("X-data:")
+                print(x)
+                print("Y-data:")
+                print(y)
+                raise FunctionFitError
             # The following are used to determine if the fit is good
             # Two criteria maybe used to determine the goodness of fit
             # Root Mean Square Error (RMSE) of the Relative Difference Error -> rmse_rel_diff_err
@@ -613,6 +576,7 @@ def find_fit(
                 print("----------------------------------------------")
                 print("jstart: {0}\tjend: {1}\tforward step: {2}\tbackward step: {3}".format(
                     jstart, jend, jfstep, jbstep))
+                print("fiteration: {0}\tbiteration: {1}".format(fiteration,biteration))
                 print("Absolute Residual: {0:.2e}\tBest Abs. Residual: {1:.2e}\tLast Abs. Residual: {2:.2e}".format(
                     residual, best_residual, last_residual))
                 print("RMSE: {0:.2%}\tBest RMSE: {1:.2%}\tLast RMSE: {2:.2%}".format(
@@ -819,18 +783,3 @@ def _fit_polynomial_func(x, *args):
         )
 
     return total
-
-
-def ideal_gas_law_pressure_to_density(P_gas, T_gas: int | float = 300):
-    """
-    Returns neutral gas density [Torr]
-
-    Parameters:
-    P_gas [Torr]
-    T_gas (optional=300) [K]
-    """
-
-    P = P_gas
-    P = P*101325/760            # unit: J/m^3 <- [Torr]*[101325 Pa/760 Torr]*[1 J/m^3/1 Pa] NOTE: 1 atm = 101325 Pa = 760 Torr
-    N = P/(c.K_B*T_gas )        # unit: m^-3 <- [J/m^3]/([J/K]*[K])
-    return N                    # unit: m^-3

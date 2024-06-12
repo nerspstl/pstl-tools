@@ -64,6 +64,7 @@ def get_ion_saturation_current(
         1: 'floating',
         2: 'minimum',
         3: 'combined',
+        4: 'Ies',
     }
 
     # Converts method: str -> method: int if method is a str
@@ -83,6 +84,8 @@ def get_ion_saturation_current(
         func = minimum_ion_current_method
     elif method == 3:
         func = combined_plasma_and_floating_method
+    elif method == 4:
+        func = calculate_ion_saturation_current_from_Ies
     else:  # makes a table of options if error occurs
         table = "\n".join([f"{k}\t{v}" for k, v in available_methods.items()])
         raise ValueError(
@@ -311,9 +314,17 @@ def combined_plasma_and_floating_method(
         other['area'] = area
     return ion_saturation_current, other
 
+def calculate_ion_saturation_current_from_Ies(*args, **kwargs) -> tuple[float, dict[str, Any]]:
+    electron_sat = kwargs.pop("electron_sat", None)
+    amu = kwargs.pop("amu", None)
+    ion_sat: float = -np.divide(electron_sat, amu)
+    if ion_sat is np.nan:
+        raise ValueError
+    other: dict[str,Any] = {}
+    return ion_sat, other
 
 def calculate_ion_saturation_current_xenon(electron_sat) -> float:
-    ion_sat = -np.divide(electron_sat, 323)
+    ion_sat = -np.divide(electron_sat, 131.29)
     if ion_sat is np.nan:
         raise ValueError
     return ion_sat

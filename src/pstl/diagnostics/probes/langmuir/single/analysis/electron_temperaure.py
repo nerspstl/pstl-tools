@@ -6,10 +6,11 @@ Testing get_electron_temperature func - funcs_electon_temperature.py
 """
 
 import numpy as np
+import pprint
 
 from pstl.utls.verify import verify_type
 from pstl.utls.functionfit.helpers import find_fit
-from pstl.diagnostics.probes.langmuir.single.analysis.floating_potential import get_floating_potential, check_for_floating_potential, get_above_floating_potential
+from pstl.diagnostics.probes.langmuir.single.analysis.floating_potential import get_floating_potential, check_for_floating_potential, get_above_floating_potential, get_positive_current
 
 # defaults for 'find_fit' function
 default_fit_kwargs = {
@@ -74,7 +75,10 @@ def get_electron_temperature_fit(
     #xdata = voltage[istart:]
     #ydata = current[istart:]
 
-    istart, xdata, ydata = get_above_floating_potential(V_f,voltage, current,*args,**kwargs)
+    #istart, xdata, ydata = get_above_floating_potential(V_f,voltage, current,*args,**kwargs)
+    n = 20
+    istart, xdata, ydata = get_positive_current(n, voltage, current, *args, **kwargs)
+    #pprint.pprint(np.where(ydata<0))
 
     # Set defaults for find fit search
     # sets default values for electron retarding fit, then updates with passed kwargs, then updates with fit_kwargs

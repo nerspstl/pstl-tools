@@ -108,6 +108,40 @@ def get_above_floating_potential(V_f, voltage, current, *args, **kwargs):
 
     return istart, xdata, ydata
 
+def get_positive_current(n, voltage, current, *args, **kwargs):
+    indices = np.where(current > 0 )[0]
+    #print(indices)
+    length = current.shape[0]
+    #print(length)
+    exit = False
+    for shape, istart in np.ndenumerate(indices):
+        k = shape[0]
+        #print(k, shape, istart)
+        c = 0
+        N = n+0  if k+n<length else length -k 
+        #print("\nstart:")
+        #print("c,k,istart,N\n",c, k, istart, N)
+        for kk in range(0,N): 
+            i_kk = istart + kk 
+            k_kk = indices[k+kk]
+            #print("trying:\nc, kk, i_kk, k_kk\n", c, kk, i_kk, k_kk)
+            if i_kk == k_kk:
+                c += 1
+                if c==n:
+                    exit = True
+                    #print(True)
+                    break
+            else:
+                break
+        if exit is True:
+            break
+
+    
+    xdata = voltage[istart:]
+    ydata = current[istart:]
+
+    return istart, xdata, ydata
+
 def get_at_and_above_floating_potential(V_f, voltage, current, *args, **kwargs):
     # Once floating Potential is found, find its index w.r.t. data
     istart = np.where(voltage < V_f)[0][-1]+1
