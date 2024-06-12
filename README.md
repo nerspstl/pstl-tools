@@ -139,3 +139,6 @@ Examples of the GUI Langmuir can be found in the same locations as the template.
 Known issue in 
 `settings_langmuir_solver-01.json`
 using the negative index for fits.
+
+## Acknowledgements
+If you use this package for analysis, please acknowledge this package and version used.
