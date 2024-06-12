@@ -116,20 +116,20 @@ def get_positive_current(n, voltage, current, *args, **kwargs):
     exit = False
     for shape, istart in np.ndenumerate(indices):
         k = shape[0]
-        #print(k, shape, istart)
+        print(k, shape, istart)
         c = 0
         N = n+0  if k+n<length else length -k-1 
-        #print("\nstart:")
-        #print("c,k,istart,N\n",c, k, istart, N)
+        print("\nstart:")
+        print("c,k,istart,N\n",c, k, istart, N)
         for kk in range(0,N): 
             i_kk = istart + kk 
             k_kk = indices[k+kk]
-            #print("trying:\nc, kk, i_kk, k_kk\n", c, kk, i_kk, k_kk)
+            print("trying:\nc, kk, i_kk, k_kk\n", c, kk, i_kk, k_kk)
             if i_kk == k_kk:
                 c += 1
                 if c==n:
                     exit = True
-                    #print(True)
+                    print(True)
                     break
             else:
                 break
