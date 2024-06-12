@@ -62,7 +62,7 @@ args = parser.parse_args()
 
 
 available_shapes = {
-    0: ['cylinderical'],
+    0: ['cylinderical', 'cylindrical'],
     1: ['spherical'],
     2: ['planar', 'planer'],
 }
