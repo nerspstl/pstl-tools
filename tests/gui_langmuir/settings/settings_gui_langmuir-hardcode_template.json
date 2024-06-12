@@ -5,8 +5,8 @@
         {
             "saveas"    :   "results_plot.png",
             "stype"     :   "png",
-            "width"     :   4,
-            "height"    :   3
+            "width"     :   5,
+            "height"    :   4
         },
     "panel_kwargs"      :   
         {
@@ -33,7 +33,7 @@
             "probe"     :   {   "BUILD" :   
                 {
                     "name"      :   "Langmuir Probe Name",
-                    "shape"     :   "spherical",
+                    "shape"     :   "cylindrical",
                     "diameter"  :   1e-2,
                     "length"    :   7.9e-3,
                     "args"      :   [],
@@ -45,7 +45,7 @@
                     "name"      :   "Data IV Trace",
                     "file"      :   "DATA.csv",
                     "file_type" :   ".csv",
-                    "negative"  :   true,
+                    "negative"  :   false,
                     "args"      :   [],
                     "kwargs"    :   {"delimiter":",","header":null, "names":["voltage","current"],"skiprows": null}
 

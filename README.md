@@ -4,8 +4,8 @@ Python scripts for making working with UMICH NERS PSTL Lab Equipment much easier
 ## Current Version
 v2024.06.2
 
-## Tested Python Versions
-- v3.11
+## Python Version
+- >v3.11
 
 ## Requried Packages
 - pyvisa (with VISA library aviable or pyvisa-py)
@@ -97,7 +97,7 @@ Have a .CSV file comma delimlated with one-line for the headers.
 Run the following once python package is installed via pip install
 
 ```
-gui_langmuir <-additional flags>
+gui_langmuir <-additional flags> 
 ```
 
 some optional flags are
@@ -111,18 +111,23 @@ gui_langmuir -S settings_gui_langmuir.json
 this runs a single Langmuir probe anaylsis and saves graphs when save button is hit.
 
 A template hardcoded settings file can be found at 
-https://github.com/umich-pstl/pstl-tools/blob/dev/tests/gui_langmuir/settings/settings_gui_langmuir-hardcode_template.json
+https://github.com/umich-pstl/pstl-tools/blob/main/tests/gui_langmuir/settings/settings_gui_langmuir-hardcode_template.json
+
+A buidling template is like 
+https://github.com/umich-pstl/pstl-tools/blob/main/tests/gui_langmuir/settings/settings_gui_langmuir-02.json
+can also be used to in an automated script to quickly swap out probe JSON files.
 
 In this JSON file, paths to the following are requried:
 - solver.data.BUILD.file = <path\to\data\file.csv>
+- solver.data.BUILD.negative = bool (false by default)
 The kwargs have delimiter is set to "," but can be "\t" for tab-delimited. If there is a header set header=0 if not, null. If there are extra rows above the header set skiprows=number of these rows.
 
 The plasma settings need to also be defined under
 - solver.plasma.BUILD (either neutral_gas = xenon, krypton, neon or m_i needs to be defined)
 
 The probe dimensions need to be defined as well under 
-- solver.probe.BUILD (all diameters and lengths are in meters)
-and probe type
+- solver.probe.BUILD.diameter = # (in meters)
+- solver.probe.BUILD.length = # (in meters, leave as zero for planar)
 - sovler.probe.BUILD.shape = (spherical, cylindrical, planar)
 
 Optional definitions inclued
