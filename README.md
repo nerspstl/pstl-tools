@@ -89,7 +89,7 @@ then, run the following
 pip install pyvisa-py
 ```
 
-[For more help vith python venv](https://docs.python.org/3/library/venv.html)
+[For more help with python venv](https://docs.python.org/3/library/venv.html)
 
 ### GUI Langmuir Example
 Have a .CSV file comma delimlated with one-line for the headers.
@@ -105,7 +105,7 @@ some optional flags are
 
 i.e.
 ```
-gui_langmuir -S solver_settings.json
+gui_langmuir -S settings_gui_langmuir.json
 ```
 
 this runs a single Langmuir probe anaylsis and saves graphs when save button is hit.
