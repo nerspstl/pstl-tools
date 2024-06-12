@@ -118,7 +118,7 @@ def get_positive_current(n, voltage, current, *args, **kwargs):
         k = shape[0]
         #print(k, shape, istart)
         c = 0
-        N = n+0  if k+n<length else length -k 
+        N = n+0  if k+n<length else length -k-1 
         #print("\nstart:")
         #print("c,k,istart,N\n",c, k, istart, N)
         for kk in range(0,N): 
