@@ -114,7 +114,7 @@ and probe type
 - sovler.probe.BUILD.shape = (spherical, cylindrical, planar)
 
 Optional definitions inclued
-- preprocess = true (to remove noisy data points, default is false) 
+- preprocess = true (to remove noisy data points, default is true but maybe changed in the future) 
 - name = "NAME-TO-DISPLAY-ON-SOLVER-GUI"
 - canvas_kwargs.saveas = "BASENAME-TO-SAVE-PLOT-AS.png"
 - cavas_kwargs.width(or height) = size of gui plots
@@ -122,3 +122,8 @@ Optional definitions inclued
 
 
 future updates will have additional buttons to change the analysis methods
+
+Examples of the GUI Langmuir can be found in the same locations as the template.
+Known issue in 
+`settings_langmuir_solver-01.json`
+using the negative index for fits.

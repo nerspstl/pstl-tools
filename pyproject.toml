@@ -38,7 +38,7 @@ Homepage = "https://github.com/umich-pstl/pstl-tools"
 [project.scripts]
 #ipe = "ipe.__main__:main"
 janus_langmuir_wall = "pstl.scripts.janus.probes.langmuir.wall.__main__:main"
-gui_langmuir = "pstl.scripts.gui_langmuir:main"
+gui_langmuir = "pstl.scripts.gui_langmuir.__main__:main"
 rc_bakeout = "pstl.scripts.monitor.main_daq.py:main"
 
 [tool.bumpver]
