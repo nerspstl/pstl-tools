@@ -1,8 +1,9 @@
 {
+    "preprocess"        : true,
     "name"              :   "TEST_LANGMUIR-Hardcode_Template",
     "canvas_kwargs"     : 
         {
-            "saveas"    :   "tests/gui_langmuir/results/results_plot.png",
+            "saveas"    :   "results_plot.png",
             "stype"     :   "png",
             "width"     :   4,
             "height"    :   3
@@ -11,7 +12,7 @@
         {
             "displays_kwargs"  :
                 {
-                    "fname" :   "tests/gui_langmuir/results/results_outputs.csv",
+                    "fname" :   "results_outputs.csv",
                     "ftype" :   "csv"
                 },
             "controls_kwargs"  :   {}
@@ -22,7 +23,7 @@
             "description"   :   "solves an IV Langmuir trace",
             "plasma"        :   {   "BUILD" :
                 {
-                    "name"          :   "Rocket Chamber Background Gas (Xenon)",
+                    "name"          :   "Background Gas (Xenon)",
                     "description"   :   "Xenon gas",
                     "neutral_gas"   :   "xenon",
                     "masses"        :   {"m_i":null,"m_e":null},
@@ -31,7 +32,7 @@
             },
             "probe"     :   {   "BUILD" :   
                 {
-                    "name"      :   "Ball Langmuir Probe (BLP)",
+                    "name"      :   "Langmuir Probe Name",
                     "shape"     :   "spherical",
                     "diameter"  :   1e-2,
                     "length"    :   7.9e-3,
@@ -41,8 +42,8 @@
             },
             "data"      :  {    "BUILD" : 
                 {
-                    "name"      :   "Test NSTAR BLP IV Trace",
-                    "file"      :   "tests/gui_langmuir/database/lang_data-01-no_header.csv",
+                    "name"      :   "Data IV Trace",
+                    "file"      :   "DATA.csv",
                     "file_type" :   ".csv",
                     "negative"  :   true,
                     "args"      :   [],
@@ -68,10 +69,10 @@
                 "electron_density_kwargs"      :   {},
                 "electron_saturation_current_kwargs"   :   {
                     "fit_kwargs"    :   {
-                        "fitmax"    :   1,
-                        "bitmax"    :   1,
-                        "istart"    :   32,
-                        "iend"      :   -1,
+                        "fitmax"    :   null,
+                        "bitmax"    :   null,
+                        "istart"    :   null,
+                        "iend"      :   null,
                         "printlog" :   false
                     }
                 },

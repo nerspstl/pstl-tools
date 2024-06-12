@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pstl-tools"
-version = "v2023.10.0dev2"
+version = "v2024.06.0dev"
 description = "Python scripts for making working with UMICH NERS PSTL Lab Equipment much easier"
 readme = "README.md"
 authors = [{ name = "tyjoto", email = "tyjoto@gmail.com" }]
@@ -29,19 +29,20 @@ dependencies = [
 requires-python = ">=3.11"
 
 [project.optional-dependencies]
-dev = ["pip-tools","pyvisa-py","pyserial","alicat","psutil","zeroconf"]
+dev = ["pip-tools", "psutil", "zeroconf"]
+pyvisa-py = ["pyvisa-py","pyserial","alicat"]
 
 [project.urls]
-Homepage = "https://github.com/nerspstl/pstl-tools"
+Homepage = "https://github.com/umich-pstl/pstl-tools"
 
 [project.scripts]
 #ipe = "ipe.__main__:main"
 janus_langmuir_wall = "pstl.scripts.janus.probes.langmuir.wall.__main__:main"
-gui_langmuir = "pstl.scripts.test.test_gui_langmuir:main"
+gui_langmuir = "pstl.scripts.gui_langmuir:main"
 rc_bakeout = "pstl.scripts.monitor.main_daq.py:main"
 
 [tool.bumpver]
-current_version = "v2023.10.0dev2"
+current_version = "v2024.06.0dev"
 version_pattern = "vYYYY.0M.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 tag_message = "{new_version}"
