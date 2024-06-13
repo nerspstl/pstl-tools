@@ -111,14 +111,14 @@ def get_above_floating_potential(V_f, voltage, current, *args, **kwargs):
 def get_positive_current(n, voltage, current, *args, **kwargs):
     indices = np.where(current > 0 )[0]
     #print(indices)
-    length = current.shape[0]
+    length = indices.shape[0]
     #print(length)
     exit = False
     for shape, istart in np.ndenumerate(indices):
         k = shape[0]
         #print(k, shape, istart)
         c = 0
-        N = n+0  if k+n<length else length -k 
+        N = n+0  if k+n<length else length -k-1 
         #print("\nstart:")
         #print("c,k,istart,N\n",c, k, istart, N)
         for kk in range(0,N): 
@@ -127,7 +127,7 @@ def get_positive_current(n, voltage, current, *args, **kwargs):
             #print("trying:\nc, kk, i_kk, k_kk\n", c, kk, i_kk, k_kk)
             if i_kk == k_kk:
                 c += 1
-                if c==n:
+                if c==N:
                     exit = True
                     #print(True)
                     break
