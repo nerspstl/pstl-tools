@@ -50,18 +50,21 @@ def gui_langmuir(settings:dict):
         btn_savenclose = tk.Button(app,text="Save and Close app", command=save_n_close)
         btn_savenclose.pack()
     finally:
-        def raise_flagged():
-            raise Flagged
+        def raise_flagged(app,msg=""):
+            app.destroy()
+            #print("FLAGGED: ",msg)
+            raise Flagged(msg)
         # close button
         btn = tk.Button(app,text="Close App",command=app.destroy)
         btn.pack()
 
         # flag button
-        btn_flag = tk.Button(app,text="Flag",command=raise_flagged)
+        flag_str = repr("{0}".format(str(settings.get("name","Unknown"))))
+        btn_flag = tk.Button(app,text="Flag",command=lambda: raise_flagged(app, flag_str))
         btn_flag.pack()
         try:
             # run loop
             app.mainloop()
         except Flagged as e:
             app.destroy()
-            raise Flagged(repr("{0}".format(str(settings.get("name","Unknown")))))
+            raise Flagged

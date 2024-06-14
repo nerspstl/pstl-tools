@@ -6,7 +6,7 @@ from pstl.utls.objects import setup as object_setup
 from pstl.diagnostics.probes.classes import Probe
 
 available_probe_classes = [
-    ["cylinderical"],
+    ["cylinderical", "cylindrical"],
     ["spherical"],
     ["planer", "planar"],
 ]
