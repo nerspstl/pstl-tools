@@ -2,7 +2,7 @@
 Python scripts for making working with UMICH NERS PSTL Lab Equipment much easier
 
 ## Current Version
-v2024.06.8dev0
+v2024.06.8
 
 ## Python Version
 - >v3.11
