@@ -80,6 +80,8 @@ def topham(voltage, current, shape, r_p, area, m_i, *args,
     ratio_extras = {}
     I_e = float()
 
+    ionsat_method = 2
+
 
 
     try:
@@ -220,7 +222,7 @@ def topham(voltage, current, shape, r_p, area, m_i, *args,
             #print("m_i\n", m_i)
             # get ionsaturation value at V_f based on V_s, I_es, n_e, KT_e, V_f (need V_s to solve)
             I_is, I_is_extras = get_ion_saturation_current(
-                voltage, current, V_f=V_f, method=4,
+                voltage, current, V_f=V_f, method=ionsat_method,
                 I_i_fit=I_i_fit, I_i_method=sheath_method,
                 V_s=V_s, n_e=n_e,T_e=KT_e, area=area,
                 electron_sat=I_es, amu=c.kg_2_amu(m_i),
@@ -277,9 +279,13 @@ def topham(voltage, current, shape, r_p, area, m_i, *args,
             # how to do ion saturation current for thick and transitional (i think below works)
             # get ionsaturation value at V_f based on V_s, I_es, n_e, KT_e, V_f (need V_s to solve)
             I_is, I_is_extras = get_ion_saturation_current(
-                voltage, current, V_f=V_f, method=3,
+                #voltage, current, V_f=V_f, method=ionsat_method,
+                #I_i_fit=I_i_fit, I_i_method=sheath_method,
+                #V_s=V_s, n_e=n_e,T_e=KT_e, area=area,
+                voltage, current, V_f=V_f, method=ionsat_method,
                 I_i_fit=I_i_fit, I_i_method=sheath_method,
                 V_s=V_s, n_e=n_e,T_e=KT_e, area=area,
+                electron_sat=I_es, amu=c.kg_2_amu(m_i),
             )
 
 
