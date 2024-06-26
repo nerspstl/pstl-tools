@@ -80,7 +80,7 @@ def topham(voltage, current, shape, r_p, area, m_i, *args,
     ratio_extras = {}
     I_e = float()
 
-    ionsat_method = 2
+    ionsat_method = 5
 
 
 
