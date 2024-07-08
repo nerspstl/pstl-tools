@@ -1,9 +1,11 @@
 import string
 from typing import Any, Optional, Union, Tuple, Sequence, Callable
+import traceback
 
 import numpy as np
 import numpy.typing as npt
 from numpy.polynomial import Polynomial as P
+from numpy.linalg import LinAlgError
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.signal import savgol_filter, find_peaks
@@ -11,7 +13,7 @@ from scipy.interpolate import interp1d
 import pandas as pd
 
 from pstl.utls import constants as c
-from pstl.utls.errors import FitConvergenceError, MissingReturnError
+from pstl.utls.errors import FitConvergenceError, MissingReturnError, FunctionFitError
 from pstl.utls.verify import verify_iterables, verify_1D_array, verify_type
 
 
@@ -281,8 +283,6 @@ def determine_step(step: int | float, step_type: str, len_x: int) -> int:
     if istep == 0:
         istep += 1
     return istep
-
-
 def find_fit(
         xdata: npt.ArrayLike, ydata: npt.ArrayLike, deg: int = 1, power: int | float = 1, polarity: int = 1,
         reverse: bool = False, return_best: bool = False, fit_type: str = "polynomial",
@@ -406,14 +406,16 @@ def find_fit(
     # if reverse direction
     if reverse:
         # initialize counter index backward
-        jend = int(len_x) if iend is None else int(iend)
+        jend = int(len_x) if iend is None else int(iend) if int(iend)>=0 else int(len_x)+int(iend)
         # initiailize counter index forward
-        jstart = 0 if istart is None else int(istart)
+        jstart = 0 if istart is None else int(istart) if int(istart)>=0 else int(len_x)+int(istart)
     else:
         # initialize counter index forward
-        jstart = 0 if istart is None else int(istart)
+        jstart = 0 if istart is None else int(istart) if int(istart)>=0 else int(len_x)+int(istart)
         # initiailize counter index backward
-        jend = int(len_x) if iend is None else int(iend)
+        jend = int(len_x) if iend is None else int(iend)if int(iend)>=0 else int(len_x)+int(iend)
+    
+    #print(f"Start: jstart={jstart}\tjend={jend}")
 
     # initialize jfstep, jbstep index advancement counters
     jfstep = 0
@@ -450,22 +452,29 @@ def find_fit(
 
     # outer loop helper function
     def outer():
-        out = ((jend >= min_points if istart is None else istart+min_points) if reverse else (
-            jstart <= len_x-min_points if iend is None else iend-min_points)) and (
-            (biteration < bitmax if bitmax is not None else True) if reverse else
-            (fiteration < fitmax if fitmax is not None else True))
+        #print("OUTER")
+        #print(f"jstart={jstart}\tjend={jend}\treverse={reverse}")
+        step_bool = (((jend >= min_points) if istart is None else (jend>=istart+min_points))) if reverse else ((jstart <= len_x-min_points) if iend is None else ((jstart<=iend-min_points) if iend>=0 else (jstart<=len_x+iend-min_points)))
+        iteration_num_bool = ((biteration < bitmax if bitmax is not None else True) if reverse else (fiteration < fitmax if fitmax is not None else True))
+        out = step_bool and  iteration_num_bool
+        #print(f"step_bool={step_bool}\titeration_num_bool={iteration_num_bool}\tout={out}")
         return out
 
     # inner loop helper function
     def inner():
-        out = (jstart <= jend-min_points) if reverse else (jend >= jstart+min_points) and (
-            (fiteration < fitmax if fitmax is not None else True) if reverse else
-            (biteration < bitmax if bitmax is not None else True))
+        #print("INNER")
+        #print(f"jstart={jstart}\tjend={jend}\treverse={reverse}")
+        step_bool = (jstart <= jend-min_points) if reverse else (jend >= jstart+min_points)
+        iteration_num_bool= ((fiteration < fitmax if fitmax is not None else True) if reverse else (biteration < bitmax if bitmax is not None else True))
+        out =  step_bool and iteration_num_bool
+        #print(f"step_bool={step_bool}\titeration_num_bool={iteration_num_bool}\tout={out}")
 
         return out
 
     # Start outer loop to continue till the length of array from start index to end is less than minimum points
-    while outer():
+    outer_bool = outer()
+    #print(f"outer_bool={outer_bool}")
+    while outer_bool:
 
         # Restart residual and rsme convergence trackers because the outerloop restarted and would not be a fair comparison
         last_residual = float("inf")
@@ -473,68 +482,84 @@ def find_fit(
         last_rsq = float("inf")
 
         # Start inner loop to continue till the length of the array between start index and to end index is less than minimum points
-        while inner():
+        inner_bool = inner()
+        #print(f"inner_bool={inner_bool}")
+        while inner_bool:
             # Grab the arrays with specified start indexes
             x = xdata[jstart:jend]
             y = ydata[jstart:jend] * polarity
 
-            if fit_type == "linear" or (fit_type == "polynomial" and deg == 1):
-                # Determine the Coefs for linear (same as polynomial but deg is automatically set to 1 no matter what
-                # This uses  ~numpy.polonomial.Polonomial.fit (note: this is least squares fit )
-                poly = P.fit(x, y, deg=deg)
-                # y-values on standared plot using x-values of actual data area of interest
-                yp = poly.convert()(x)
+            try:
 
-            elif fit_type == "polynomial":
-                # Determine the Coefs for polynomial using regression fit using ~numpy.polonomial.Polonomial.fit (note: this is least squares fit )
-                poly = P.fit(x, y, deg=deg)
-                # y-values on standared plot using x-values of actual data area of interest
-                yp = poly.convert()(x)
+                if fit_type == "linear" or (fit_type == "polynomial" and deg == 1):
+                    # Determine the Coefs for linear (same as polynomial but deg is automatically set to 1 no matter what
+                    # This uses  ~numpy.polonomial.Polonomial.fit (note: this is least squares fit )
+                    poly = P.fit(x, y, deg=deg)
+                    # y-values on standared plot using x-values of actual data area of interest
+                    yp = poly.convert()(x)
 
-            elif fit_type == "exponential":
-                # Take natural log of data
-                logy = np.log(y)
-                # Determine the Coefs for semilogy using linear regression fit in semilogy space (note: this is non-linear regression)
-                poly = P.fit(x, logy, 1, w=np.sqrt(y))
-                # poly = P.fit(x, logy, 1)
-                # popt, opt = curve_fit(_fit_exponential_func, x,
-                #                      y, p0=poly.convert().coef)
-                # poly.coef = np.polynomial.polyutils.mapdomain(
-                #    popt, [-1, 1], poly.domain)
-                # poly.domain = [-1, 1]
+                elif fit_type == "polynomial":
+                    # Determine the Coefs for polynomial using regression fit using ~numpy.polonomial.Polonomial.fit (note: this is least squares fit )
+                    poly = P.fit(x, y, deg=deg)
+                    # y-values on standared plot using x-values of actual data area of interest
+                    yp = poly.convert()(x)
 
-                # y-values on standared plot using x-values of actual data area of interest
-                yp = np.exp(poly.convert()(x))
+                elif fit_type == "exponential":
+                    # Take natural log of data
+                    logy = np.log(y)
+                    # Determine the Coefs for semilogy using linear regression fit in semilogy space (note: this is non-linear regression)
+                    poly = P.fit(x, logy, 1, w=np.sqrt(y))
+                    # poly = P.fit(x, logy, 1)
+                    # popt, opt = curve_fit(_fit_exponential_func, x,
+                    #                      y, p0=poly.convert().coef)
+                    # poly.coef = np.polynomial.polyutils.mapdomain(
+                    #    popt, [-1, 1], poly.domain)
+                    # poly.domain = [-1, 1]
 
-            elif fit_type == "power":
-                # Take inverse power of data
-                mody = np.power(y, 1/power)
-                # Determine the Coefs for fit using linear regression fit in mod power space (note: this is non-linear regression)
-                poly = P.fit(x, mody, 1)
+                    # y-values on standared plot using x-values of actual data area of interest
+                    yp = np.exp(poly.convert()(x))
 
-                # y-values on standared plot using x-values of actual data area of interest
-                temp = poly.convert()(x)
-                if invalid == "ignore":
-                    with np.errstate(invalid='ignore'):
+                elif fit_type == "power":
+                    # Take inverse power of data
+                    mody = np.power(y, 1/power)
+                    # Determine the Coefs for fit using linear regression fit in mod power space (note: this is non-linear regression)
+                    poly = P.fit(x, mody, 1)
+
+                    # y-values on standared plot using x-values of actual data area of interest
+                    temp = poly.convert()(x)
+                    if invalid == "ignore":
+                        with np.errstate(invalid='ignore'):
+                            yp = np.power(temp, power)
+                    else:
                         yp = np.power(temp, power)
+
+                    # correct for polarity
+                    # yp *= polarity
+
+                    # check for nan because of the root
+                    inan = np.argwhere(np.isnan(yp))
+
+                    # remove nans for comparisons
+                    # y = np.delete(y, inan)
+                    # yp = np.delete(yp, inan)
+
                 else:
-                    yp = np.power(temp, power)
+                    raise ValueError("'fit_type' is not a known value of 'linear', 'polynomial', 'exponential', or 'power': {}".format(
+                        fit_type
+                    ))
 
-                # correct for polarity
-                # yp *= polarity
-
-                # check for nan because of the root
-                inan = np.argwhere(np.isnan(yp))
-
-                # remove nans for comparisons
-                # y = np.delete(y, inan)
-                # yp = np.delete(yp, inan)
-
-            else:
-                raise ValueError("'fit_type' is not a known value of 'linear', 'polynomial', 'exponential', or 'power': {}".format(
-                    fit_type
-                ))
-
+            except ValueError as err:
+                print("ValueError Fail: functionfit")
+                traceback.print_exc()
+                raise ValueError(err)
+            except LinAlgError as err:
+                print("General Fail: functionfit")
+                traceback.print_exc()
+                print("X-data:")
+                print(x)
+                print("Y-data:")
+                print(y)
+                raise FunctionFitError
             # The following are used to determine if the fit is good
             # Two criteria maybe used to determine the goodness of fit
             # Root Mean Square Error (RMSE) of the Relative Difference Error -> rmse_rel_diff_err
@@ -607,6 +632,7 @@ def find_fit(
             # else, only convergence has to be made between the two points since threshold was meet on the canidite point
             # Then, exit is set to true to break
             exit = threshold and convergence if strict else convergence
+            #print(f"exit={exit}, strict={strict}, convergence={convergence}")
 
             # If printlog is True, show steps in printed log
             if printlog:
@@ -689,6 +715,8 @@ def find_fit(
                 jend -= jbstep
                 # advance interation
                 biteration += 1
+            inner_bool = inner()
+            #print(f"INNER: fitertion={fiteration}\tbiteration={biteration}: jstart={jstart}\tjend={jend}")
 
         # Exits the outerloop if criteria meet
         if exit:
@@ -697,12 +725,14 @@ def find_fit(
         # Restart conter index for inner loop
         if reverse:
             # initiailize or restart counter index forward
-            jstart = 0 if istart is None else int(istart)
+            #jstart = 0 if istart is None else int(istart)
+            jstart = 0 if istart is None else int(istart) if int(istart)>=0 else int(len_x)+int(istart)
             # restart inner loop couter
             fiteration = 0
         else:
             # initiailize or restart counter index backward
-            jend = int(len_x) if iend is None else int(iend)
+            #jend = int(len_x) if iend is None else int(iend)
+            jend = int(len_x) if iend is None else int(iend) if int(iend)>=0 else int(len_x)+int(iend)
             # restart inner loop couter
             biteration = 0
 
@@ -723,6 +753,8 @@ def find_fit(
             jstart += jfstep
             # advance outer interation
             fiteration += 1
+        outer_bool = outer()
+        #print(f"INNER: fitertion={fiteration}\tbiteration={biteration}: jstart={jstart}\tjend={jend}")
 
     # if exit is True, then criteria meet and can exit
     if exit:
@@ -737,6 +769,7 @@ def find_fit(
             raise FitConvergenceError
     else:
         raise FitConvergenceError
+
 
 
 def normalize(x: np.ndarray) -> np.ndarray:
