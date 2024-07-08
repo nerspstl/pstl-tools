@@ -65,6 +65,7 @@ def get_ion_saturation_current(
         2: 'minimum',
         3: 'combined',
         4: 'Ies',
+        5: "minimum_fit",
     }
 
     # Converts method: str -> method: int if method is a str
@@ -86,6 +87,8 @@ def get_ion_saturation_current(
         func = combined_plasma_and_floating_method
     elif method == 4:
         func = calculate_ion_saturation_current_from_Ies
+    elif method == 5:
+        func = minimum_ion_current_fit_method
     else:  # makes a table of options if error occurs
         table = "\n".join([f"{k}\t{v}" for k, v in available_methods.items()])
         raise ValueError(
@@ -254,8 +257,31 @@ def minimum_ion_current_method(
     # 2) vectors same length
     # 3) no odd things in ion saturation region such as duplicates or spikes
 
+    I_i_fit= _get_ion_current_fit(voltage,current,*args,**kwargs)
+
+    # Returns in formate (value, Dict[str,Any])
+    other: dict[str, Any] = {"fit": I_i_fit}
     # Following set format of (value, Dict)
-    return np.min(current), {}
+    return np.min(current), other
+
+
+def minimum_ion_current_fit_method(
+        voltage: npt.ArrayLike,
+        current: npt.ArrayLike,
+        *args, **kwargs) -> Tuple[float, Dict[str, Any]]:
+    # maybe later add checks for:
+    # 1) increasing current with increasing voltage (aka neg current to pos current)
+    # 2) vectors same length
+    # 3) no odd things in ion saturation region such as duplicates or spikes
+
+    I_i_fit= _get_ion_current_fit(voltage,current,*args,**kwargs)
+    Vmin = np.min(voltage)
+
+    # Returns in formate (value, Dict[str,Any])
+    other: dict[str, Any] = {"fit": I_i_fit}
+    # Following set format of (value, Dict)
+    return np.min(I_i_fit(Vmin)), other
+
 
 def combined_plasma_and_floating_method(
         voltage, current, *args,
@@ -314,13 +340,16 @@ def combined_plasma_and_floating_method(
         other['area'] = area
     return ion_saturation_current, other
 
-def calculate_ion_saturation_current_from_Ies(*args, **kwargs) -> tuple[float, dict[str, Any]]:
+def calculate_ion_saturation_current_from_Ies(voltage, current,*args, **kwargs) -> tuple[float, dict[str, Any]]:
     electron_sat = kwargs.pop("electron_sat", None)
     amu = kwargs.pop("amu", None)
     ion_sat: float = -np.divide(electron_sat, amu)
     if ion_sat is np.nan:
         raise ValueError
-    other: dict[str,Any] = {}
+    I_i_fit= _get_ion_current_fit(voltage,current,*args,**kwargs)
+
+    # Returns in formate (value, Dict[str,Any])
+    other: dict[str, Any] = {"fit": I_i_fit}
     return ion_sat, other
 
 def calculate_ion_saturation_current_xenon(electron_sat) -> float:
@@ -333,5 +362,5 @@ def _combined_get_ion_saturation_current(n,area,T_e,V_f,V_s):
     # T_e is eV
     I_es = c.e*n*area*np.sqrt((c.e*T_e)/(2*np.pi*c.m_e))
     I_e = I_es*np.exp(c.e*(V_f-V_s)/(T_e*c.e))
-    I_isat = I_e # @ floating potential
+    I_isat = -I_e # @ floating potential
     return I_isat
