@@ -76,7 +76,8 @@ def get_electron_temperature_fit(
     #ydata = current[istart:]
 
     #istart, xdata, ydata = get_above_floating_potential(V_f,voltage, current,*args,**kwargs)
-    n = 20
+    #n = 50
+    n = (voltage<=V_f).sum() + 1
     istart, xdata, ydata = get_positive_current(n, voltage, current, *args, **kwargs)
     #pprint.pprint(np.where(ydata<0))
 
