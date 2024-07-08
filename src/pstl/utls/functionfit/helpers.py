@@ -298,6 +298,7 @@ def find_fit(
     xdata = np.array(xdata)
     ydata = np.array(ydata)
 
+
     # Set Defaults for threshold residual if not given
     threshold_residual = 0 if threshold_residual is None else threshold_residual
 
@@ -414,6 +415,9 @@ def find_fit(
         jstart = 0 if istart is None else int(istart) if int(istart)>=0 else int(len_x)+int(istart)
         # initiailize counter index backward
         jend = int(len_x) if iend is None else int(iend)if int(iend)>=0 else int(len_x)+int(iend)
+    # Check index range is larger than min_points
+    if jend-jstart <min_points:
+        raise ValueError(f"jstart={jstart} and jend={jend} index range is {jend-jstart} is less than min points {min_points}")
     
     #print(f"Start: jstart={jstart}\tjend={jend}")
 
