@@ -250,6 +250,8 @@ class ControlFunctionFit(tk.Frame):
             cnf: dict[str, Any] | None = {},
             *args,
             **kwargs): 
+        vstart_kwargs = kwargs.get("vstart_kwargs",{})
+        vend_kwargs = kwargs.get("vend_kwargs",{})
         istart_kwargs = kwargs.get("istart_kwargs",{})
         iend_kwargs = kwargs.get("iend_kwargs",{})
         fitmax_kwargs = kwargs.get("fitmax_kwargs",{})
@@ -266,6 +268,8 @@ class ControlFunctionFit(tk.Frame):
         self.widgets = Widgets()
 
         # create four ControlLabelEntryFrames
+        vstart = ControlEntryLabelFrame(lbl_txt="vstart",master=self,cnf=cnf,**vstart_kwargs)
+        vend = ControlEntryLabelFrame(lbl_txt="vend",master=self,cnf=cnf,**vend_kwargs)
         istart = ControlEntryLabelFrame(lbl_txt="istart",master=self,cnf=cnf,**istart_kwargs)
         iend = ControlEntryLabelFrame(lbl_txt="iend",master=self,cnf=cnf,**iend_kwargs)
         fitmax = ControlEntryLabelFrame(lbl_txt="fitmax",master=self,cnf=cnf,**fitmax_kwargs)
@@ -277,24 +281,30 @@ class ControlFunctionFit(tk.Frame):
         cancel_btn = tk.Button(self,cnf,text="Cancel",**cancel_kwargs)
 
         # pack away
-        istart.grid(row=0,column=0,sticky="NSEW")
-        iend.grid(
+        vstart.grid(row=0,column=0,sticky="NSEW")
+        vend.grid(
             row=0,
             column=1,
             sticky="NSWE",
         )
-        fitmax.grid(
-            row=1,
-            column=0,
-            sticky="NSWE",
-        )
-        bitmax.grid(
+        istart.grid(row=1,column=0,sticky="NSEW")
+        iend.grid(
             row=1,
             column=1,
             sticky="NSWE",
         )
-        min_points.grid(
+        fitmax.grid(
             row=2,
+            column=0,
+            sticky="NSWE",
+        )
+        bitmax.grid(
+            row=2,
+            column=1,
+            sticky="NSWE",
+        )
+        min_points.grid(
+            row=3,
             column=0,
             sticky="NSWE",
         )
@@ -311,6 +321,8 @@ class ControlFunctionFit(tk.Frame):
         )
 
         # save them
+        self.widgets.frames["vstart"] = vstart
+        self.widgets.frames["vend"] = vend
         self.widgets.frames["istart"] = istart
         self.widgets.frames["iend"] = iend
         self.widgets.frames["fitmax"] = fitmax
@@ -321,6 +333,8 @@ class ControlFunctionFit(tk.Frame):
         self.widgets.buttons["cancel"] = cancel_btn
 
         # create short handel
+        self._vstart = vstart
+        self._vend = vend
         self._istart = istart
         self._iend = iend
         self._fitmax = fitmax
@@ -331,6 +345,14 @@ class ControlFunctionFit(tk.Frame):
         self.columnconfigure(1, weight=1, uniform="fred")
         #self.rowconfigure(0, weight=1, uniform="fred")
         #self.rowconfigure(1, weight=1, uniform="fred")
+    
+    @property
+    def vstart(self):
+        return self._vstart
+    
+    @property
+    def vend(self):
+        return self._vend
 
     @property
     def istart(self):

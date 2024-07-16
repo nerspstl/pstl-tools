@@ -286,7 +286,9 @@ def determine_step(step: int | float, step_type: str, len_x: int) -> int:
 def find_fit(
         xdata: npt.ArrayLike, ydata: npt.ArrayLike, deg: int = 1, power: int | float = 1, polarity: int = 1,
         reverse: bool = False, return_best: bool = False, fit_type: str = "polynomial",
-        min_points: int = 5, istart: int | None = None, iend: int | None = None, invalid: str = "ignore",
+        min_points: int = 5, istart: int | None = None, iend: int | None = None, 
+        vstart: int | None = None, vend: int | None = None,
+        invalid: str = "ignore",
         fstep: int | float | None = None, fstep_type: str | None = None, fstep_adjust: bool = True, fitmax: int | None = None,
         bstep: int | float | None = None, bstep_type: str | None = None, bstep_adjust: bool = True, bitmax: int | None = None,
         threshold_residual: int | float | None = None, threshold_rmse: int | float = 0.30,
@@ -298,6 +300,9 @@ def find_fit(
     xdata = np.array(xdata)
     ydata = np.array(ydata)
 
+    # Check if vstart or vend is set and translate to istart or iend
+    istart=np.argmax(x>=vstart) if vstart is not None else istart
+    iend=np.argmax(x>=vend) if vend is not None else iend
 
     # Set Defaults for threshold residual if not given
     threshold_residual = 0 if threshold_residual is None else threshold_residual
