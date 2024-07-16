@@ -350,6 +350,10 @@ class SaveResults(tk.Frame):
 
             with open(fname, "w") as outfile:
                 json.dump(results, outfile) 
+        elif ftype.upper() == "PNG":
+            if fname is None:
+                fname = "output.png"
+            self.command()
         else:
             raise ValueError("Not supported export type. Try:\n") # add list of types
         

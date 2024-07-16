@@ -163,26 +163,41 @@ class FirstDerivativeSingleProbeLangmuir(MatplotlibCanvasWToolbarSave):
         try:
             voltage = solver.data.voltage
             current = solver.data.current
+            current_e = solver.data.current_e
+            vf = solver.results["V_f"]["value"]
+            indices = np.where(voltage>vf)[0][0]
+            current_e = current_e[indices:]
+            voltage_e = solver.data.voltage[indices:]
 
             win_len = 3
             polyorder = 1
 
-            gradient_1D = np.gradient(current, voltage)
-            smoothed_1D = savgol_filter(
-                current,
-                window_length=win_len,
-                polyorder=polyorder)
-            smoothed_1D = np.gradient(smoothed_1D, voltage)
-            smoothed_1D_savgol = savgol_filter(
-                current, 
-                window_length=win_len,
-                polyorder=polyorder,
-                deriv=1
-            )
-            self.ax.plot(voltage, gradient_1D, "-",label="np.gradient")
-            self.ax.plot(voltage, smoothed_1D,"-",label="savgol, then gradiend")
-            self.ax.plot(voltage, smoothed_1D_savgol,"-",label="sp.signal.savgol_filter")
+            def solve_1stdev(voltage, current):
+                gradient_1D = np.gradient(current, voltage)
+                smoothed_1D = savgol_filter(
+                    current,
+                    window_length=win_len,
+                    polyorder=polyorder)
+                smoothed_1D = np.gradient(smoothed_1D, voltage)
+                smoothed_1D_savgol = savgol_filter(
+                    current, 
+                    window_length=win_len,
+                    polyorder=polyorder,
+                    deriv=1
+                )
+                return gradient_1D, smoothed_1D, smoothed_1D_savgol
+            c_gradient_1D, c_smoothed_1D, c_smoothed_1D_savgol = solve_1stdev(current, voltage)
+            ce_gradient_1D, ce_smoothed_1D, ce_smoothed_1D_savgol = solve_1stdev(current_e, voltage_e)
+            self.ax.set_xlabel("Voltage [V]")
+            self.ax.set_ylabel(r"d$I_p$/dV,d$I_e$/dV [A/V]")
+            self.ax.plot(voltage, c_gradient_1D, "--",color="C0",label=r"$I_p$ np.gradient")
+            self.ax.plot(voltage, c_smoothed_1D,"--",color="C1",label=r"$I_p$ savgol, then gradiend")
+            self.ax.plot(voltage, c_smoothed_1D_savgol,"--",color="C2",label=r"$I_p$ sp.signal.savgol_filter")
+            self.ax.plot(voltage_e, ce_gradient_1D, "-",color="C0",label=r"$I_e$ np.gradient")
+            self.ax.plot(voltage_e, ce_smoothed_1D,"-",color="C1",label=r"$I_e$ savgol, then gradiend")
+            self.ax.plot(voltage_e, ce_smoothed_1D_savgol,"-",color="C2",label=r"$I_e$ sp.signal.savgol_filter")
             self.ax.legend()
+            self.fig.tight_layout()
     
         except:
             print("unable to make first derivative plot")
@@ -209,7 +224,7 @@ class LinearSemilogyDoubleCanvas(tk.Frame):
         super().__init__(master, cnf, **kwargs)
 
         if isinstance(saveas, list):
-            self.saveass = saveas
+            self.saveas = saveas
         elif isinstance(saveas, str):
             slist = saveas.split('.')
             if len(slist) == 1:
@@ -379,12 +394,36 @@ class LinearSemilogyDoubleCanvasSingleProbeLangmuir(LinearSemilogyDoubleCanvas):
         self.ion_saturation_fill = None
 
         # make 1der plot show hide buttons
-        canvas_1der = FirstDerivativeSingleProbeLangmuir(self,cnf, **kwargs)
+        if isinstance(saveas, str):
+            slist = saveas.split('.')
+            if len(slist) == 1:
+                path = saveas
+                ext = str()
+            elif len(slist) >= 2:
+                num_ext_char = len(slist[-1])
+                iend = -(num_ext_char+1)
+                ext = saveas[iend:]
+                path = saveas[:iend]
+            elif len(slist) == 0:
+                raise ValueError("Something went wrong")
+            else:
+                raise ValueError("Lenth of list cannot be negative")
+
+            saveas_der = []
+            for i in range(1):
+                if i == 0:
+                    sappend = "_first_derivative"
+                else:
+                    sappend = str(i)
+                saveas_der.append(path+sappend+ext)
+
+        canvas_1der = FirstDerivativeSingleProbeLangmuir(self,cnf, saveas=saveas_der, **kwargs)
         canvas_1der.grid(row=0, column=0, sticky="NWSE")
         self.widgets.frames["1der"] = canvas_1der
         show_hide_btn = tk.Button(self,cnf,text="Show/Hide",command=self.show_hide)
         show_hide_btn.grid(row=2, column=0,columnspan=2,sticky="NSEW")
         self.widgets.frames["linear"].tkraise()
+        self.frame3 = self.widgets.frames["1der"]
         self.ax3 = canvas_1der.ax
     def show_hide(self):
         canvas_1der = self.widgets.frames["1der"]
@@ -607,6 +646,11 @@ class LinearSemilogyDoubleCanvasSingleProbeLangmuir(LinearSemilogyDoubleCanvas):
         self.ax1.cla()
         self.ax2.cla()
         self.ax3.cla()
+    
+    def save(self):
+        super().save()
+        self.frame3.save()
+
 
 
 

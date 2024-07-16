@@ -231,6 +231,13 @@ class ControlEntryLabelFrame(tk.Frame):
     def clear_entry(self):
         self.widgets.entries["entry"].delete(0,tk.END)
     
+    def get_label_text(self) -> str | None:
+        value = self.widgets.labels["label"]["text"]
+        return value
+
+class ControlEntryLabelFrameInt(ControlEntryLabelFrame):
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
     def get_entry(self) -> int | None:
         value = self.widgets.entries["entry"].get()
         if value.lower() == "none" or value == "":
@@ -238,10 +245,17 @@ class ControlEntryLabelFrame(tk.Frame):
         else:
             value = int(value)
         return value
-    def get_label_text(self) -> str | None:
-        value = self.widgets.labels["label"]["text"]
+    
+class ControlEntryLabelFrameFloat(ControlEntryLabelFrame):
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+    def get_entry(self) -> float| None:
+        value = self.widgets.entries["entry"].get()
+        if value.lower() == "none" or value == "":
+            value = None
+        else:
+            value = float(value)
         return value
-
 
 class ControlFunctionFit(tk.Frame):
     def __init__(
@@ -268,13 +282,13 @@ class ControlFunctionFit(tk.Frame):
         self.widgets = Widgets()
 
         # create four ControlLabelEntryFrames
-        vstart = ControlEntryLabelFrame(lbl_txt="vstart",master=self,cnf=cnf,**vstart_kwargs)
-        vend = ControlEntryLabelFrame(lbl_txt="vend",master=self,cnf=cnf,**vend_kwargs)
-        istart = ControlEntryLabelFrame(lbl_txt="istart",master=self,cnf=cnf,**istart_kwargs)
-        iend = ControlEntryLabelFrame(lbl_txt="iend",master=self,cnf=cnf,**iend_kwargs)
-        fitmax = ControlEntryLabelFrame(lbl_txt="fitmax",master=self,cnf=cnf,**fitmax_kwargs)
-        bitmax = ControlEntryLabelFrame(lbl_txt="bitmax",master=self,cnf=cnf,**bitmax_kwargs)
-        min_points = ControlEntryLabelFrame(lbl_txt="min_points",master=self,cnf=cnf,**bitmax_kwargs)
+        vstart = ControlEntryLabelFrameFloat(lbl_txt="vstart",master=self,cnf=cnf,**vstart_kwargs)
+        vend = ControlEntryLabelFrameFloat(lbl_txt="vend",master=self,cnf=cnf,**vend_kwargs)
+        istart = ControlEntryLabelFrameInt(lbl_txt="istart",master=self,cnf=cnf,**istart_kwargs)
+        iend = ControlEntryLabelFrameInt(lbl_txt="iend",master=self,cnf=cnf,**iend_kwargs)
+        fitmax = ControlEntryLabelFrameInt(lbl_txt="fitmax",master=self,cnf=cnf,**fitmax_kwargs)
+        bitmax = ControlEntryLabelFrameInt(lbl_txt="bitmax",master=self,cnf=cnf,**bitmax_kwargs)
+        min_points = ControlEntryLabelFrameInt(lbl_txt="min_points",master=self,cnf=cnf,**bitmax_kwargs)
         # create update and clear
         update_btn = tk.Button(self,cnf,text="Update",**update_kwargs)
         cancel_kwargs.setdefault("command", self.clear_enteries)
