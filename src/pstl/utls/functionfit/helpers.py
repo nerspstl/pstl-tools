@@ -301,8 +301,8 @@ def find_fit(
     ydata = np.array(ydata)
 
     # Check if vstart or vend is set and translate to istart or iend
-    istart=np.argmax(x>=vstart) if vstart is not None else istart
-    iend=np.argmax(x>=vend) if vend is not None else iend
+    istart=np.argmax(xdata>=vstart) if vstart is not None else istart
+    iend=np.argmax(xdata>=vend) if vend is not None else iend
 
     # Set Defaults for threshold residual if not given
     threshold_residual = 0 if threshold_residual is None else threshold_residual
