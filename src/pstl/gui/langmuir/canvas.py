@@ -173,14 +173,14 @@ class FirstDerivativeSingleProbeLangmuir(MatplotlibCanvasWToolbarSave):
             # pass in the data
             voltage = solver.data.voltage
             current = solver.data.current
-            current_e = solver.data.current_e
-            voltage_e =  solver.data.voltage
+
             # change to pandas for sorting and removal of data for derivative
             data = pd.DataFrame({
                 "voltage": voltage, 
                 "current": current, 
-                "current_e": current_e,
-                "voltage_e": voltage_e}
+                #"current_e": current_e,
+                #"voltage_e": voltage_e,
+                }
                 )
             # sort data
             data.sort_values(by="voltage", ascending=True,inplace=True)
@@ -189,13 +189,23 @@ class FirstDerivativeSingleProbeLangmuir(MatplotlibCanvasWToolbarSave):
             # unpack back out
             voltage = data.voltage.to_numpy()
             current = data.current.to_numpy()
-            current_e = data.current_e.to_numpy()
-            voltage_e = data.voltage_e.to_numpy()
+            #current_e = data.current_e.to_numpy()
+            #voltage_e = data.voltage_e.to_numpy()
 
-            # solve for floating potential
-            vf = solver.results["V_f"]["value"]
-            indices = np.where(voltage>vf)[0][0]
+            try:
+                # solve for floating potential
+                vf = solver.results["V_f"]["value"]
+                if vf is None:
+                    vf = voltage[np.where(current>=0)[0][0]]
+            except:
+                vf = voltage[np.where(current>=0)[0][0]]
+            finally:
+                try:
+                    indices = np.where(voltage>=vf)[0][0]
+                except Exception as e:
+                    raise ValueError(f"Value for V_f in results failed.\n{e}")
 
+            print(indices)
             # get updated current_e and voltage_e based on Vf
             current_e = current_e[indices:]
             voltage_e = voltage_e[indices:]
