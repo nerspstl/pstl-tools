@@ -286,7 +286,7 @@ def determine_step(step: int | float, step_type: str, len_x: int) -> int:
 def find_fit(
         xdata: npt.ArrayLike, ydata: npt.ArrayLike, deg: int = 1, power: int | float = 1, polarity: int = 1,
         reverse: bool = False, return_best: bool = False, fit_type: str = "polynomial",
-        min_points: int = 5, istart: int | None = None, iend: int | None = None, 
+        min_points: int | None = 5, istart: int | None = None, iend: int | None = None, 
         vstart: int | None = None, vend: int | None = None,
         invalid: str = "ignore",
         fstep: int | float | None = None, fstep_type: str | None = None, fstep_adjust: bool = True, fitmax: int | None = None,
@@ -303,6 +303,9 @@ def find_fit(
     # Check if vstart or vend is set and translate to istart or iend
     istart=np.argmax(xdata>=vstart) if vstart is not None else istart
     iend=np.argmax(xdata>=vend) if vend is not None else iend
+
+    # set default min_points if None is passed
+    min_points:int = 5 if min_points is None else min_points
 
     # Set Defaults for threshold residual if not given
     threshold_residual = 0 if threshold_residual is None else threshold_residual

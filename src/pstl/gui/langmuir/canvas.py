@@ -174,14 +174,24 @@ class FirstDerivativeSingleProbeLangmuir(MatplotlibCanvasWToolbarSave):
             voltage = solver.data.voltage
             current = solver.data.current
 
-            # change to pandas for sorting and removal of data for derivative
-            data = pd.DataFrame({
+            # try to get current_e
+            try:
+                voltage_e = solver.data.voltage
+                current_e = solver.data.current_e
+                data={
                 "voltage": voltage, 
                 "current": current, 
-                #"current_e": current_e,
-                #"voltage_e": voltage_e,
+                "current_e": current_e,
+                "voltage_e": voltage_e,
                 }
-                )
+            except:
+                data={
+                "voltage": voltage, 
+                "current": current, 
+                }
+
+            # change to pandas for sorting and removal of data for derivative
+            data = pd.DataFrame(data)
             # sort data
             data.sort_values(by="voltage", ascending=True,inplace=True)
             # remove duplicates
@@ -189,8 +199,11 @@ class FirstDerivativeSingleProbeLangmuir(MatplotlibCanvasWToolbarSave):
             # unpack back out
             voltage = data.voltage.to_numpy()
             current = data.current.to_numpy()
-            #current_e = data.current_e.to_numpy()
-            #voltage_e = data.voltage_e.to_numpy()
+            try:
+                current_e = data.current_e.to_numpy()
+                voltage_e = data.voltage_e.to_numpy()
+            except:
+                pass
 
             try:
                 # solve for floating potential
@@ -205,14 +218,9 @@ class FirstDerivativeSingleProbeLangmuir(MatplotlibCanvasWToolbarSave):
                 except Exception as e:
                     raise ValueError(f"Value for V_f in results failed.\n{e}")
 
-            print(indices)
-            # get updated current_e and voltage_e based on Vf
-            current_e = current_e[indices:]
-            voltage_e = voltage_e[indices:]
-
             # basic filter settings
-            win_len = 3
-            polyorder = 1
+            win_len = 6
+            polyorder = 2
 
             # function for derivative
             def solve_1stdev(x, y):
@@ -226,7 +234,7 @@ class FirstDerivativeSingleProbeLangmuir(MatplotlibCanvasWToolbarSave):
                     polyorder=polyorder)
                 smoothed_1D = np.gradient(smoothed_1D, x)
                 smoothed_1D_smoothed = savgol_filter(
-                    y,
+                    smoothed_1D,
                     window_length=win_len,
                     polyorder=polyorder)
                 # SGF-dI/dV
@@ -239,6 +247,7 @@ class FirstDerivativeSingleProbeLangmuir(MatplotlibCanvasWToolbarSave):
                 # normalized by max
                 gradient_1D = np.divide(gradient_1D, np.max(gradient_1D))
                 smoothed_1D = np.divide(smoothed_1D, np.max(smoothed_1D))
+                smoothed_1D_smoothed = np.divide(smoothed_1D_smoothed, np.max(smoothed_1D_smoothed))
                 smoothed_1D_savgol = np.divide(smoothed_1D_savgol, np.max(smoothed_1D_savgol))
                 return gradient_1D, smoothed_1D, smoothed_1D_smoothed, smoothed_1D_savgol
             ## solve 1st der ##
@@ -249,31 +258,45 @@ class FirstDerivativeSingleProbeLangmuir(MatplotlibCanvasWToolbarSave):
                 c_smoothed_1D_smoothed, 
                 c_smoothed_1D_savgol,
                 ) = solve_1stdev(voltage, current)
-            # solve Ie der #
-            (
-                ce_gradient_1D, 
-                ce_smoothed_1D, 
-                ce_smoothed_1D_smoothed, 
-                ce_smoothed_1D_savgol,
-                ) = solve_1stdev(voltage_e, current_e)
-            
-            # set x and y labels
-            self.ax.set_xlabel("Voltage [V]")
-            self.ax.set_ylabel(r"(d$I_p$/dV,d$I_e$/dV)/(d$I_p$/dV,d$I_e$/dV)_{max} [-]")
             
             ## plot ##
+            # set x and y labels
+            self.ax.set_xlabel("Voltage [V]")
+            self.ax.set_ylabel(r"$(dI_p/dV,dI_e/dV)/(dI_p/dV,dI_e/dV)_{max}$ [-]")
+            
             # plot first der Ip
-            self.ax.plot(voltage, c_gradient_1D, "--",color="C0",label=r"$\frac{I_p}{dV}$", alpha=0.4)
-            self.ax.plot(voltage, c_smoothed_1D,"--",color="C1",label=r"SG-$\frac{I_p}{dV}$", alpha=0.7)
-            self.ax.plot(voltage, c_smoothed_1D_smoothed,"--",color="C3",label=r"SG-$\frac{I_p}{dV}$-SG")
-            self.ax.plot(voltage, c_smoothed_1D_savgol,"--",color="C2",label=r"$\frac{I_p}{dV}$ via SGF", alpha=0.7)
-            # plot first der Ie
-            self.ax.plot(voltage_e, ce_gradient_1D, "-",color="C0",label=r"$\frac{I_e}{dV}$", alpha=0.4)
-            self.ax.plot(voltage_e, ce_smoothed_1D,"-",color="C1",label=r"SG-$\frac{I_e}{dV}$", alpha=0.7)
-            self.ax.plot(voltage_e, ce_smoothed_1D_smoothed,"-",color="C3",label=r"SG-$\frac{I_e}{dV}$-SG")
-            self.ax.plot(voltage_e, ce_smoothed_1D_savgol,"-",color="C2",label=r"$\frac{I_e}{dV}$ via SGF", alpha=0.7)
+            self.ax.plot(voltage, c_gradient_1D, "--",color="C0",label=r"$\frac{dI_p}{dV}$", alpha=0.4)
+            self.ax.plot(voltage, c_smoothed_1D,"--",color="C2",label=r"SG-$\frac{dI_p}{dV}$", alpha=0.4)
+            self.ax.plot(voltage, c_smoothed_1D_smoothed,"--",color="C1",label=r"SG-$\frac{dI_p}{dV}$-SG")
+            self.ax.plot(voltage, c_smoothed_1D_savgol,"--",color="C3",label=r"$\frac{dI_p}{dV}$ via SGF", alpha=0.7)
+            
+            # legend order if current_e not present
+            order = [0,1,2,3]
+            
+            # try to add current_e stuff
+            try:
+                # get updated current_e and voltage_e based on Vf
+                current_e = current_e[indices:]
+                voltage_e = voltage_e[indices:]
+                # solve Ie der #
+                (
+                    ce_gradient_1D, 
+                    ce_smoothed_1D, 
+                    ce_smoothed_1D_smoothed, 
+                    ce_smoothed_1D_savgol,
+                    ) = solve_1stdev(voltage_e, current_e)
+                # plot first der Ie
+                self.ax.plot(voltage_e, ce_gradient_1D, "-",color="C0",label=r"$\frac{dI_e}{dV}$", alpha=0.4)
+                self.ax.plot(voltage_e, ce_smoothed_1D,"-",color="C2",label=r"SG-$\frac{dI_e}{dV}$", alpha=0.4)
+                self.ax.plot(voltage_e, ce_smoothed_1D_smoothed,"-",color="C1",label=r"SG-$\frac{dI_e}{dV}$-SG")
+                self.ax.plot(voltage_e, ce_smoothed_1D_savgol,"-",color="C3",label=r"$\frac{dI_e}{dV}$ via SGF", alpha=0.7)
+                
+                # legend order if current_e
+                order = [6, 2]
+            except:
+                pass
+
             # add legend
-            order = [3, 6]
             lns = self.ax.lines
             labs = [l.get_label() for l in lns]
             lgnd = self.ax.legend([lns[i] for i in order], [labs[i] for i in order])
