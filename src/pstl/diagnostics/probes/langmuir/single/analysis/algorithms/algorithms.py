@@ -236,6 +236,7 @@ def topham(voltage, current, shape, r_p, area, m_i, *args,
             )
             # lambda_D
             lambda_De, lambda_De_extras = get_lambda_D(n_e, KT_e)
+            lambda_Dei, lambda_Dei_extras = get_lambda_D(n_i, KT_e)
 
             # ratio
             ratio, ratio_extras = get_probe_to_sheath_ratio(r_p, lambda_De)
@@ -310,6 +311,9 @@ def topham(voltage, current, shape, r_p, area, m_i, *args,
             results["n_e"]["other"] = n_e_extras
             results["lambda_De"]["value"] = lambda_De
             results["lambda_De"]["other"] = lambda_De_extras
+            #results["lambda_Dei"] = {"value":None, "other": None}
+            #results["lambda_Dei"]["value"] = lambda_Dei
+            #results["lambda_Dei"]["other"] = lambda_Dei_extras
             results["r_p/lambda_De"]["value"] = ratio
             results["r_p/lambda_De"]["other"] = ratio_extras
             results["sheath"]["value"] = ratio_extras['sheath']
@@ -353,6 +357,8 @@ def topham(voltage, current, shape, r_p, area, m_i, *args,
         results["n_e"]["other"] = n_e_extras
         results["lambda_De"]["value"] = lambda_De
         results["lambda_De"]["other"] = lambda_De_extras
+        #results["lambda_Dei"]["value"] = lambda_Dei
+        #results["lambda_Dei"]["other"] = lambda_Dei_extras
         results["r_p/lambda_De"]["value"] = ratio
         results["r_p/lambda_De"]["other"] = ratio_extras
         results["sheath"]["value"] = ratio_extras['sheath']
