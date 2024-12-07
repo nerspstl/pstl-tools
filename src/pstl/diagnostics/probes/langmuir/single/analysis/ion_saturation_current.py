@@ -197,6 +197,18 @@ def _get_ion_current_fit(voltage, current, *args, I_i_fit=None,I_i_method=None,*
     # check if fit needs to be found to evaluate at floating potential
     shape = kwargs.get("shape", None)
     fit_kwargs = kwargs.pop("fit_kwargs", {})
+
+    # get and set floating potential for fit dowmain of ion current 
+    V_f = kwargs.pop("V_f", None)
+    if V_f is None:
+        floating_kwargs = kwargs.pop('V_f_kwargs', {})
+        floating_kwargs.setdefault('method', "consecutive")
+        V_f = kwargs.pop("V_f", get_floating_potential(voltage, current, **floating_kwargs))
+    domain_range = [min(voltage), V_f]
+    fit_kwargs.setdefault("domain_range", domain_range )
+    fit_kwargs["printlog"] = True
+
+    # get ion currrent
     I_i_fit = check_for_ion_current_fit(
         I_i_fit, voltage, current, shape, method=I_i_method, fit_kwargs=fit_kwargs)
     

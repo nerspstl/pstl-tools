@@ -30,6 +30,7 @@ def cylinderical_method(voltage, current, *args, **kwargs):
     # I_i function
     fit_kwargs = dict(default_fit_power_kwargs)
     fit_kwargs["power"] = 0.5
+    fit_kwargs["domain_range"] = [min(voltage), V_f]
     fit_kwargs.update(kwargs.pop("fit_kwargs", {}))
     fit = find_fit(xdata, ydata, **fit_kwargs)
     # silence error when computing
@@ -75,6 +76,7 @@ def spherical_method(voltage, current, *args, **kwargs):
     # I_i function
     fit_kwargs = dict(default_fit_linear_kwargs)
     fit_kwargs["power"] = 1
+    fit_kwargs["domain_range"] = [min(voltage), V_f]
     fit_kwargs.update(kwargs.pop("fit_kwargs", {}))
     fit = find_fit(xdata, ydata, **fit_kwargs)
     # silence error when computing
@@ -121,6 +123,7 @@ def planar_method(voltage, current, *args, **kwargs):
     # I_i function
     fit_kwargs = dict(default_fit_linear_kwargs)
     fit_kwargs["power"] = 1
+    fit_kwargs["domain_range"] = [min(voltage), V_f]
     fit_kwargs.update(kwargs.pop("fit_kwargs", {}))
     fit = find_fit(xdata, ydata, **fit_kwargs)
     # silence error when computing

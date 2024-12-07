@@ -288,7 +288,7 @@ def find_fit(
         reverse: bool = False, return_best: bool = False, fit_type: str = "polynomial",
         min_points: int | None = 5, istart: int | None = None, iend: int | None = None, 
         vstart: int | None = None, vend: int | None = None, invalid: str = "ignore", 
-        domain_range: list | None = None,
+        domain_range: list | None = None, domain_condition: str | None = None, domain_value: float | None = None,
         fstep: int | float | None = None, fstep_type: str | None = None, fstep_adjust: bool = True, fitmax: int | None = None,
         bstep: int | float | None = None, bstep_type: str | None = None, bstep_adjust: bool = True, bitmax: int | None = None,
         threshold_residual: int | float | None = None, threshold_rmse: int | float = 0.30,
@@ -642,9 +642,32 @@ def find_fit(
                 
             # check if domain range meets domain condition
             if domain_range is not None:
-                domain = np.any(np.isnan(create_fit()(domain_range)))
-                # flip domain as if nan then domain is true, but we want it false
-                domain = False if domain else True
+                values = create_fit()(domain_range)
+                if domain_value is not None:
+                    if domain_condition == "nan":
+                        domain = np.any(np.isnan(values))
+                        # flip domain as if nan then domain is true, but we want it false
+                        domain = False if domain else True
+                    elif domain_condition == "less_than" or domain_condition == "lt":
+                        domain = np.all(np.less(values, domain_value))
+                    elif domain_condition == "less_than_or_equal_to" or domain_condition == "lte":
+                        domain = np.all(np.less_equal(values, domain_value))
+                    elif domain_condition == "greater_than" or domain_condition == "gt":
+                        domain = np.all(np.greater(values, domain_value))
+                    elif domain_condition == "greater_than_or_equal_to" or domain_condition == "gte":
+                        domain = np.all(np.greater_equal(values, domain_value))
+                    elif domain_condition is None:
+                        domain = True
+                    else:
+                        raise ValueError("'domain_condition' & 'domain_value' error: %s & %s"%(domain_condition, domain_value))
+                else:
+                    if domain_condition == "nan":
+                        domain = np.any(np.isnan(values))
+                        # flip domain as if nan then domain is true, but we want it false
+                        domain = False if domain else True
+                    else:
+                        raise ValueError("'domain_condition' & 'domain_value' error: %s & %s"%(domain_condition, domain_value))
+
             else:
                 domain = False # should not be used in this function
 

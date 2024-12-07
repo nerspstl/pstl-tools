@@ -10,6 +10,7 @@ default_fit_linear_kwargs = {
     'convergence_residual_percent': 1.0, 'convergence_rmse_percent': 10.0,
     'convergence_rsq_percent': 1.0, 'convergence_method': None,
     'strict': False, 'full': True, 'printlog': False,
+    'domain_condition': "lt", 'domain_value': 0,
 }
 
 default_fit_power_kwargs = {
@@ -23,4 +24,5 @@ default_fit_power_kwargs = {
     'convergence_residual_percent': 1.0, 'convergence_rmse_percent': 10.0,
     'convergence_rsq_percent': 1.0, 'convergence_method': None,
     'strict': False, 'full': True, 'printlog': False,
+    'domain_condition': "lt", 'domain_value': 0,
 }
