@@ -287,8 +287,8 @@ def find_fit(
         xdata: npt.ArrayLike, ydata: npt.ArrayLike, deg: int = 1, power: int | float = 1, polarity: int = 1,
         reverse: bool = False, return_best: bool = False, fit_type: str = "polynomial",
         min_points: int | None = 5, istart: int | None = None, iend: int | None = None, 
-        vstart: int | None = None, vend: int | None = None,
-        invalid: str = "ignore",
+        vstart: int | None = None, vend: int | None = None, invalid: str = "ignore", 
+        domain_range: list | None = None,
         fstep: int | float | None = None, fstep_type: str | None = None, fstep_adjust: bool = True, fitmax: int | None = None,
         bstep: int | float | None = None, bstep_type: str | None = None, bstep_adjust: bool = True, bitmax: int | None = None,
         threshold_residual: int | float | None = None, threshold_rmse: int | float = 0.30,
@@ -639,11 +639,24 @@ def find_fit(
             else:
                 raise ValueError("'threshold_method' can only be 'both', 'rmse', 'residual', or 'rsq': %s" % (
                     str(threshold_method)))
+                
+            # check if domain range meets domain condition
+            if domain_range is not None:
+                domain = np.any(np.isnan(create_fit()(domain_range)))
+                print(domain)
+                # flip domain as if nan then domain is true, but we want it false
+                domain = False if domain else True
+                print(domain)
+            else:
+                domain = False # should not be used in this function
 
             # If strict, threshold and convergence must both be meet for both canidite point and convergence test point
             # else, only convergence has to be made between the two points since threshold was meet on the canidite point
             # Then, exit is set to true to break
-            exit = threshold and convergence if strict else convergence
+            if domain_range is not None:
+                exit = threshold and convergence and domain if strict else convergence and domain
+            else:
+                exit = threshold and convergence if strict else convergence
             #print(f"exit={exit}, strict={strict}, convergence={convergence}")
 
             # If printlog is True, show steps in printed log
@@ -661,8 +674,12 @@ def find_fit(
                     rsq, best_rsq, last_rsq))
                 print("Convergence Abs. Residual: {0:.2%}\tConvergence RMSE: {1:.2%}\tConvergence Rsquared: {2:.2%}".format(
                     convergence_residual, convergence_rmse, convergence_rsq))
-                print("Candidate:\tThreshold: {0}\tConvergence: {1}\nExit: {2}".format(
-                    threshold, convergence, exit))
+                if domain_range is not None:
+                    print("Candidate:\tThreshold: {0}\tConvergence: {1}\tDomain: {3}\nExit: {2}".format(
+                        threshold, convergence, exit, domain))
+                else:
+                    print("Candidate:\tThreshold: {0}\tConvergence: {1}\nExit: {2}".format(
+                        threshold, convergence, exit))
                 # if exit, should quit and add this extra line below
                 if exit:
                     print("----------------------------------------------")
