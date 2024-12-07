@@ -643,10 +643,8 @@ def find_fit(
             # check if domain range meets domain condition
             if domain_range is not None:
                 domain = np.any(np.isnan(create_fit()(domain_range)))
-                print(domain)
                 # flip domain as if nan then domain is true, but we want it false
                 domain = False if domain else True
-                print(domain)
             else:
                 domain = False # should not be used in this function
 
